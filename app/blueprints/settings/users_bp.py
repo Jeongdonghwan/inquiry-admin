@@ -2,7 +2,7 @@
 import re
 import secrets
 
-from flask import abort, flash, redirect, render_template, request, url_for
+from flask import abort, flash, redirect, render_template, request, session, url_for
 from flask_login import current_user
 
 from ...extensions import db
@@ -17,7 +17,7 @@ ROLE_LABELS = {"admin": "관리자", "manager": "매니저", "agent": "상담원
 @role_required("admin")
 def users():
     rows = User.query.order_by(User.is_active_flag.desc(), User.role, User.name).all()
-    return render_template("settings/users.html", rows=rows, roles=ROLE_LABELS, new_pw=request.args.get("pw"))
+    return render_template("settings/users.html", rows=rows, roles=ROLE_LABELS, new_pw=session.pop("new_pw", None))
 
 
 @bp.route("/users/new", methods=["GET", "POST"])
@@ -58,7 +58,9 @@ def user_form(uid=None):
             db.session.add(u)
             db.session.commit()
             flash(f"저장됨: {u.display}")
-            return redirect(url_for("settings.users", pw=pw) if pw and not f.get("password") else url_for("settings.users"))
+            if pw and not f.get("password"):
+                session["new_pw"] = {"login_id": u.login_id, "pw": pw}
+            return redirect(url_for("settings.users"))
     return render_template("settings/user_form.html", u=u, sites=sites, roles=ROLE_LABELS)
 
 
@@ -71,7 +73,8 @@ def user_reset_pw(uid):
     u.failed_logins, u.locked_until = 0, None
     db.session.commit()
     flash(f"{u.display} 비밀번호 초기화됨")
-    return redirect(url_for("settings.users", pw=pw))
+    session["new_pw"] = {"login_id": u.login_id, "pw": pw}
+    return redirect(url_for("settings.users"))
 
 
 @bp.post("/users/<int:uid>/toggle")

@@ -8,7 +8,7 @@
 </header>
 <div class="content col">
   {% with msgs = get_flashed_messages() %}{% for m in msgs %}<div class="flash">{{ m }}</div>{% endfor %}{% endwith %}
-  {% if new_pw %}<div class="panel secret"><b>임시 비밀번호 (지금 한 번만 표시)</b><code>{{ new_pw }}</code><span class="muted">직원에게 전달하고 첫 로그인 후 변경하도록 안내하세요.</span></div>{% endif %}
+  {% if new_pw %}<div class="panel secret"><b>{{ new_pw.login_id }} 임시 비밀번호 (지금 한 번만 표시)</b><code>{{ new_pw.pw }}</code><span class="muted">직원에게 전달하고 첫 로그인 후 변경하도록 안내하세요.</span></div>{% endif %}
   <section class="panel table">
     <div class="thead cols-users"><span>아이디</span><span>이름</span><span>역할</span><span>담당 사이트</span><span>최근 로그인</span><span>상태</span><span></span></div>
     {% for u in rows %}

@@ -1,6 +1,6 @@
 <div class="dp" data-id="{{ inq.id }}">
   <div class="dp-head">
-    <div class="meta"><i class="dot" style="background:{{ inq.site.color }}"></i>{{ inq.site.name }} · {{ {'legal':'법률','labor':'인사·노무'}[inq.site.category] }} · <span class="mono">No.{{ inq.id }}</span></div>
+    <div class="meta"><i class="dot" style="background:{{ inq.site.color }}"></i>{{ inq.site.name }} · {{ CATEGORIES[inq.site.category] }} · <span class="mono">No.{{ inq.id }}</span></div>
     <div class="name-row">
       <div><span class="name">{{ inq.customer_name }}</span><span class="type">{{ inq.inquiry_type or '' }}</span></div>
       <div class="phone mono">{{ inq.phone|phone }}</div>
@@ -56,7 +56,7 @@
 
   <div class="dp-tabs" role="tablist">
     <button type="button" class="on" data-tab="log">상담 기록 <span class="mono">{{ logs|length }}</span></button>
-    <button type="button" data-tab="sheet">상담지{% if sheet_required_missing %} <i class="req-dot" title="필수 항목 미완료"></i>{% endif %}</button>
+    <button type="button" data-tab="sheet">상담지{% if sheet_incomplete %} <i class="req-dot" title="필수 항목 미완료"></i>{% endif %}</button>
     <button type="button" data-tab="sms">문자 보내기</button>
   </div>
 

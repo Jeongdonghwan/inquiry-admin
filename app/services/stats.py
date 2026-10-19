@@ -10,9 +10,16 @@ from . import inquiry as inq_svc
 def period_bounds(period: str, frm: str | None, to: str | None):
     from .. import now_kst
     today = now_kst().date()
-    if period == "custom" and frm:
-        start = datetime.fromisoformat(frm)
-        end = datetime.fromisoformat(to) + timedelta(days=1) if to else datetime.combine(today + timedelta(days=1), datetime.min.time())
+    try:
+        custom = period == "custom" and frm and datetime.fromisoformat(frm)
+    except ValueError:
+        custom = None
+    if custom:
+        start = custom
+        try:
+            end = datetime.fromisoformat(to) + timedelta(days=1) if to else datetime.combine(today + timedelta(days=1), datetime.min.time())
+        except ValueError:
+            end = datetime.combine(today + timedelta(days=1), datetime.min.time())
     else:
         days = {"7": 7, "30": 30, "90": 90}.get(period, 30)
         start = datetime.combine(today - timedelta(days=days - 1), datetime.min.time())

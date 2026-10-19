@@ -9,7 +9,7 @@ from openpyxl.utils import get_column_letter
 
 from ... import now_kst
 from ...extensions import db
-from ...models import STATUS_LABELS, AccessLog, ConsultSheet, Inquiry
+from ...models import CATEGORIES, STATUS_LABELS, AccessLog, ConsultSheet, Inquiry
 from ...permissions import role_required
 from ...services import inquiry as svc
 from ...services import sheet as sheet_svc
@@ -45,7 +45,7 @@ def export_xlsx():
 
     f = lambda d: d.strftime("%Y-%m-%d %H:%M") if d else ""
     for r in rows:
-        row = [r.id, STATUS_LABELS[r.status], f(r.received_at), r.site.name, {"legal": "법률", "labor": "인사·노무"}[r.site.category],
+        row = [r.id, STATUS_LABELS[r.status], f(r.received_at), r.site.name, CATEGORIES.get(r.site.category, r.site.category),
                r.customer_name, r.phone, r.region or "", r.inquiry_type or "", r.message or "",
                r.assignee.display if r.assignee else "미배정", f(r.callback_at), r.utm_term or "", r.utm_source or "",
                r.utm_medium or "", r.utm_campaign or "", r.device or "", "Y" if r.duplicate_of_id else "",

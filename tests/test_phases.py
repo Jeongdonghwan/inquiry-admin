@@ -16,6 +16,11 @@ def u(login_id):
     return User.query.filter_by(login_id=login_id).one()
 
 
+def last(i):
+    """가장 최근 기록 (seed 시각은 '오늘 HH:MM'이라 테스트 실행 시각보다 뒤일 수 있어 id 기준)."""
+    return max(i.logs, key=lambda l: l.id)
+
+
 def inq(name):
     return Inquiry.query.filter_by(customer_name=name).order_by(Inquiry.id).first()
 
@@ -25,19 +30,19 @@ def test_status_change_logs_and_timestamps(app):
     i, yoon = inq("조민재"), u("yoon")
     svc.change_status(i, yoon, "contacting")
     assert i.status == "contacting" and i.first_contact_at is not None
-    assert i.logs[-1].kind == "status" and i.logs[-1].body == "신규 → 연락중"
+    assert last(i).kind == "status" and last(i).body == "신규 → 연락중"
     svc.change_status(i, yoon, "contracted")
     assert i.contracted_at is not None
     with pytest.raises(svc.ServiceError):
         svc.change_status(i, yoon, "closed")  # 사유 없음
     svc.change_status(i, yoon, "closed", "비용 불일치")
-    assert i.closed_at and "사유: 비용 불일치" in i.logs[-1].body
+    assert i.closed_at and "사유: 비용 불일치" in last(i).body
 
 
 def test_assign_rules(app):
     i, yoon, oh, kang = inq("이수진"), u("yoon"), u("oh"), u("kang")  # 이수진 = nm (oh 담당 사이트)
     svc.assign(i, oh, oh.id)
-    assert i.assignee_id == oh.id and "미배정 → 오세진 노무팀" in i.logs[-1].body
+    assert i.assignee_id == oh.id and "미배정 → 오세진 노무팀" in last(i).body
     with pytest.raises(svc.ServiceError):
         svc.assign(i, oh, kang.id)  # agent는 남에게 배정 불가
     svc.assign(i, yoon, None)
@@ -48,10 +53,10 @@ def test_callback_and_records(app):
     i, kang = inq("조민재"), u("kang")
     at = now_kst().replace(hour=19, minute=0, second=0, microsecond=0) + timedelta(days=1)
     svc.set_callback(i, kang, at)
-    assert i.callback_at == at and i.logs[-1].body.startswith("콜백 예약 ")
+    assert i.callback_at == at and last(i).body.startswith("콜백 예약 ")
     svc.add_record(i, kang, "call_missed", "")
     assert i.status == "contacting"  # 신규 → 첫 연락 시도 시 자동 전환
-    kinds = [l.kind for l in i.logs]
+    kinds = [l.kind for l in sorted(i.logs, key=lambda l: l.id)]
     assert kinds[-2:] == ["status", "call_missed"]
     with pytest.raises(svc.ServiceError):
         svc.add_record(i, kang, "memo", "   ")
@@ -167,7 +172,7 @@ def test_sms_send_now_dummy(app):
     before = len(q._dummy.sent)
     m = q.enqueue(i, yoon, "안내 문자입니다.")
     assert m.status == "sent" and m.provider == "dummy" and len(q._dummy.sent) == before + 1
-    assert i.logs[-1].kind == "sms" and i.logs[-1].body == "안내 문자입니다."
+    assert last(i).kind == "sms" and last(i).body == "안내 문자입니다."
     with pytest.raises(q.SmsError):
         q.enqueue(i, yoon, "가" * 1001)  # 2,002 byte > LMS 최대
 
@@ -189,7 +194,7 @@ def test_sms_failure_retries_then_failed(app, monkeypatch):
     i, yoon = inq("정다은"), u("yoon")
     monkeypatch.setattr(q._dummy, "send", lambda *a, **k: (False, None, "발송사 오류"))
     m = q.enqueue(i, yoon, "실패 테스트")
-    assert m.status == "queued" and m.attempts == 1 and "문자 발송 실패" in i.logs[-1].body
+    assert m.status == "queued" and m.attempts == 1 and "문자 발송 실패" in last(i).body
     q.run_worker(); q.run_worker()
     assert db.session.get(SmsMessage, m.id).status == "failed"
 

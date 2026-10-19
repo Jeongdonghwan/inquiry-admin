@@ -15,6 +15,10 @@ def now_kst() -> datetime:
     return datetime.now(KST).replace(tzinfo=None)
 
 
+def kcallback_str(dt: datetime) -> str:
+    return f"{dt.month:02d}.{dt.day:02d} ({WEEKDAYS[dt.weekday()]}) {dt:%H:%M}"
+
+
 def create_app(config_object=Config) -> Flask:
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(config_object)
@@ -62,7 +66,7 @@ def create_app(config_object=Config) -> Flask:
 
     @app.template_filter("kcallback")
     def kcallback(dt):
-        return f"{dt.month:02d}.{dt.day:02d} ({WEEKDAYS[dt.weekday()]}) {dt:%H:%M}" if dt else "미지정"
+        return kcallback_str(dt) if dt else "미지정"
 
     @app.template_filter("phone")
     def phone(num):
@@ -79,7 +83,7 @@ def create_app(config_object=Config) -> Flask:
     def inject_globals():
         from flask_login import current_user
         from sqlalchemy import func
-        from .models import STATUS_LABELS, Inquiry, Site
+        from .models import CATEGORIES, STATUS_LABELS, Inquiry, Site
 
         sites = []
         if current_user.is_authenticated:
@@ -89,6 +93,6 @@ def create_app(config_object=Config) -> Flask:
                 q = q.filter(Site.id.in_(ids))
             sites = [{"code": s.code, "name": s.name, "color": s.color, "count": n}
                      for s, n in q.group_by(Site.id).order_by(Site.id)]
-        return {"STATUS_LABELS": STATUS_LABELS, "today": now_kst(), "sidebar_sites": sites}
+        return {"STATUS_LABELS": STATUS_LABELS, "CATEGORIES": CATEGORIES, "today": now_kst(), "sidebar_sites": sites}
 
     return app

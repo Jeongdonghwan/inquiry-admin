@@ -11,7 +11,6 @@ from ..extensions import db
 from ..models import CLOSE_REASONS, STATUS_LABELS, STATUSES, AccessLog, Inquiry, InquiryLog, Site, User
 from ..permissions import can_access
 
-WEEKDAYS = "월화수목금토일"
 
 
 class ServiceError(ValueError):
@@ -32,7 +31,8 @@ def log(inq: Inquiry, user: User | None, kind: str, body: str, meta: dict | None
 
 
 def fmt_callback(dt: datetime | None) -> str:
-    return f"{dt.month:02d}.{dt.day:02d} ({WEEKDAYS[dt.weekday()]}) {dt:%H:%M}" if dt else ""
+    from .. import kcallback_str
+    return kcallback_str(dt) if dt else ""
 
 
 # ---- 상태 ----
@@ -48,7 +48,7 @@ def change_status(inq: Inquiry, user: User, status: str, close_reason: str | Non
     now = now_kst()
     prev = inq.status
     inq.status = status
-    inq.close_reason = close_reason if status == "closed" else None
+    inq.close_reason = close_reason[:100] if status == "closed" else None
     if prev == "new" and inq.first_contact_at is None:
         inq.first_contact_at = now
     if status == "contracted":
@@ -169,9 +169,12 @@ def apply_filters(q, user: User, args) -> tuple:
     elif p in ("7", "30"):
         q = q.filter(Inquiry.received_at >= datetime.combine(today - timedelta(days=int(p)), datetime.min.time()))
     elif p == "custom" and args.get("from"):
-        q = q.filter(Inquiry.received_at >= datetime.fromisoformat(args["from"]))
-        if args.get("to"):
-            q = q.filter(Inquiry.received_at < datetime.fromisoformat(args["to"]) + timedelta(days=1))
+        try:
+            q = q.filter(Inquiry.received_at >= datetime.fromisoformat(args["from"]))
+            if args.get("to"):
+                q = q.filter(Inquiry.received_at < datetime.fromisoformat(args["to"]) + timedelta(days=1))
+        except ValueError:
+            pass  # 잘못된 날짜는 기간 필터 무시
     cb = args.get("cb")
     if cb == "today":
         q = q.filter(Inquiry.callback_at >= datetime.combine(today, datetime.min.time()),
@@ -210,9 +213,9 @@ def record_view(user: User, inq: Inquiry, ip: str | None) -> None:
         db.session.commit()
 
 
-def related_duplicates(inq: Inquiry) -> list[Inquiry]:
-    """같은 연락처의 다른 문의 (앞뒤 모두)."""
+def related_duplicates(user: User, inq: Inquiry) -> list[Inquiry]:
+    """같은 연락처의 다른 문의 (앞뒤 모두). 사용자가 볼 수 있는 범위만."""
     if inq.is_masked:
         return []
-    return (Inquiry.query.filter(Inquiry.phone == inq.phone, Inquiry.id != inq.id)
+    return (scoped_query(user).filter(Inquiry.phone == inq.phone, Inquiry.id != inq.id)
             .order_by(Inquiry.received_at.desc()).all())

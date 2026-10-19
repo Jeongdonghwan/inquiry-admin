@@ -41,22 +41,4 @@
   <button class="drawer-close" type="button" aria-label="닫기">×</button>
   <div class="drawer-body">{% if drawer_html %}{{ drawer_html|safe }}{% endif %}</div>
 </aside>
-<script>
-window.Board = {
-  swapCard(id, html) {
-    const old = document.querySelector(`.card[data-id="${id}"]`); if (!old) return;
-    const t = document.createElement('div'); t.innerHTML = html; const card = t.firstElementChild;
-    const col = document.querySelector(`[data-cards="${card.dataset.status}"]`);
-    old.remove(); col.prepend(card);
-    document.querySelectorAll('.bcol').forEach(c => c.querySelector('header .mono').textContent = c.querySelectorAll('.card').length);
-  }
-};
-document.querySelector('.board').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) App.openPanel(c.dataset.id); });
-const drawer = document.getElementById('drawer');
-const closeDrawer = () => { drawer.classList.remove('open'); const u = new URL(location); u.searchParams.delete('id'); history.replaceState(null, '', u); };
-drawer.querySelector('.drawer-close').onclick = closeDrawer;
-document.addEventListener('keydown', e => e.key === 'Escape' && closeDrawer());
-document.addEventListener('click', e => { if (drawer.classList.contains('open') && !drawer.contains(e.target) && !e.target.closest('.card')) closeDrawer(); });
-{% if selected %}App.bindPanel(drawer);{% endif %}
-</script>
 {% endblock %}

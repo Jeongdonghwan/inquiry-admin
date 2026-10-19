@@ -1,7 +1,7 @@
 {# B안 서랍 상세: 같은 데이터, 채팅형 타임라인(오래된 것이 위) #}
 <div class="dp drawer-dp" data-id="{{ inq.id }}">
   <div class="dp-head">
-    <div class="meta"><i class="dot" style="background:{{ inq.site.color }}"></i>{{ inq.site.name }} · {{ {'legal':'법률','labor':'인사·노무'}[inq.site.category] }} · <span class="mono">No.{{ inq.id }}</span></div>
+    <div class="meta"><i class="dot" style="background:{{ inq.site.color }}"></i>{{ inq.site.name }} · {{ CATEGORIES[inq.site.category] }} · <span class="mono">No.{{ inq.id }}</span></div>
     <div class="name-row"><div><span class="name">{{ inq.customer_name }}</span><span class="type">{{ inq.inquiry_type or '' }}</span></div><a class="btn sm" href="tel:{{ inq.phone }}" data-call>전화 걸기 <span class="mono">{{ inq.phone|phone }}</span></a></div>
   </div>
   {% if dups %}<div class="dup-band">같은 연락처 문의 {{ dups|length }}건 · {% for d in dups %}<a href="#" data-pick="{{ d.id }}">No.{{ d.id }}</a>{{ ' · ' if not loop.last }}{% endfor %}</div>{% endif %}
@@ -50,6 +50,3 @@
   </div>
   <div class="tabpane" data-pane="sheet" hidden></div><div class="dp-tabs" hidden><button data-tab="sheet"></button></div>
 </div>
-<script>
-(() => { const dp = document.currentScript.previousElementSibling; dp.querySelectorAll('[data-ctab]').forEach(b => b.onclick = () => { dp.querySelectorAll('[data-ctab]').forEach(x => x.classList.toggle('on', x === b)); dp.querySelectorAll('[data-cpane]').forEach(p => p.hidden = p.dataset.cpane !== b.dataset.ctab); }); })();
-</script>

@@ -52,10 +52,6 @@ def visible(field: dict, answers: dict) -> bool:
     return answers.get(cond.get("key")) == cond.get("eq")
 
 
-def is_empty(v) -> bool:
-    return v is None or v == "" or v == [] or v is False and False
-
-
 def required_done(schema: dict, answers: dict) -> bool:
     return not missing_required(schema, answers)
 
@@ -68,7 +64,7 @@ def missing_required(schema: dict, answers: dict) -> list[str]:
     return out
 
 
-def required_missing(inq: Inquiry) -> bool:
+def sheet_incomplete(inq: Inquiry) -> bool:
     """탭 옆 주황 점용: 현재 상담지가 있고 필수가 비었으면 True."""
     s = current_sheet(inq)
     return bool(s and not s.required_done)
@@ -79,9 +75,10 @@ def validate_schema(schema: dict) -> None:
         raise SchemaError("sections 배열이 필요합니다")
     keys = set()
     for si, sec in enumerate(schema["sections"], 1):
-        if not sec.get("title"):
+        if not isinstance(sec, dict) or not sec.get("title"):
             raise SchemaError(f"{si}번째 섹션: 제목이 없습니다")
-        for f in sec.get("fields", []):
+        sec.setdefault("fields", [])
+        for f in sec["fields"]:
             k = f.get("key", "")
             if not re.fullmatch(r"[a-z][a-z0-9_]{0,39}", k or ""):
                 raise SchemaError(f"'{f.get('label') or k}': key는 영문 소문자 snake_case")
@@ -167,7 +164,7 @@ def summary_text(sheet: ConsultSheet) -> str:
     lines = [f"[{sheet.form.name} 상담지]"]
     for sec in sheet.form.schema_json["sections"]:
         rows = []
-        for f in sec["fields"]:
+        for f in sec.get("fields", []):
             v = a.get(f["key"])
             if v in (None, "", []) or not visible(f, a):
                 continue

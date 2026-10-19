@@ -5,6 +5,7 @@ from flask import Blueprint, render_template, request
 from flask_login import current_user, login_required
 
 from ... import now_kst
+from ...extensions import db
 from ...models import STATUS_LABELS, Inquiry, Site
 from ...services import inquiry as svc
 
@@ -36,9 +37,11 @@ def board_view():
              if current_user.site_ids() is None or s.id in current_user.site_ids()]
     sel = None
     if request.args.get("id", type=int):
-        sel = Inquiry.query.get(request.args.get("id", type=int))
+        sel = db.session.get(Inquiry, request.args.get("id", type=int))
         if sel and not svc.can_access(current_user, sel):
             sel = None
+        if sel:
+            svc.record_view(current_user, sel, request.remote_addr)
     from ..inquiries import _render_panel
     return render_template("board/board.html", cols=cols, summary=summary, sites=sites, args=request.args, selected=sel,
                            drawer_html=_render_panel(sel, "drawer") if sel else None)

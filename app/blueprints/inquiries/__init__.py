@@ -26,11 +26,15 @@ def _panel_ctx(inq: Inquiry) -> dict:
             .filter((SmsTemplate.site_id == site.id) | (SmsTemplate.site_id.is_(None)))
             .filter((SmsTemplate.category == site.category) | (SmsTemplate.category.is_(None)))
             .order_by(SmsTemplate.sort_order).all())
+    from flask import current_app
+    from ...services.template import render as render_tpl
+    phone = current_app.config["REPRESENTATIVE_PHONE"]
     return {
         "inq": inq, "logs": sorted(inq.logs, key=lambda l: l.created_at, reverse=True),
-        "dups": svc.related_duplicates(inq), "users": _assignable_users(current_user),
-        "close_reasons": CLOSE_REASONS, "templates": tpls,
-        "sheet_required_missing": sheet_svc.required_missing(inq),
+        "dups": svc.related_duplicates(current_user, inq), "users": _assignable_users(current_user),
+        "close_reasons": CLOSE_REASONS,
+        "templates": [{"name": t.name, "body": render_tpl(t.body, inq, company_phone=phone)} for t in tpls],
+        "sheet_incomplete": sheet_svc.sheet_incomplete(inq),
     }
 
 
@@ -40,7 +44,7 @@ def _render_panel(inq: Inquiry, layout: str | None = None) -> str:
 
 
 def _render_row(inq: Inquiry, selected_id: int | None) -> str:
-    return render_template("inquiries/_row.html", r=inq, selected_id=selected_id)
+    return render_template("inquiries/_row.html", r=inq, selected_id=selected_id, cb_view=request.args.get("cb") == "today")
 
 
 def _action_response(inq: Inquiry):

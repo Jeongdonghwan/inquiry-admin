@@ -1,4 +1,7 @@
-"""문자 큐 적재·즉시 발송·워커 (CLAUDE.md 6-2)."""
+"""문자 큐 적재·즉시 발송·워커 (CLAUDE.md 6-2).
+
+발송 선점은 deliver() 안의 원자적 UPDATE 한 곳에서만 한다 → 요청 경로와 cron 워커가 겹쳐도 중복 발송 없음.
+"""
 from datetime import datetime
 
 from flask import current_app
@@ -14,6 +17,7 @@ from .base import SmsProvider
 from .dummy import DummyProvider
 
 MAX_ATTEMPTS = 3
+WAITING = ("queued", "scheduled")
 _dummy = DummyProvider()
 
 
@@ -44,36 +48,42 @@ def enqueue(inq: Inquiry, user: User, body: str, scheduled_at: datetime | None =
                      scheduled_at=scheduled_at, created_at=now_kst())
     db.session.add(msg)
     db.session.flush()
-    if scheduled_at:
-        inq_svc.log(inq, user, "sms", f"[예약 {scheduled_at:%m.%d %H:%M}] {body}", {"sms_id": msg.id, "scheduled": True})
-        db.session.commit()
-        return msg
-    inq_svc.log(inq, user, "sms", body, {"sms_id": msg.id})
+    prefix = f"[예약 {scheduled_at:%m.%d %H:%M}] " if scheduled_at else ""
+    inq_svc.log(inq, user, "sms", prefix + body, {"sms_id": msg.id, "scheduled": bool(scheduled_at)})
     db.session.commit()
-    deliver(msg)  # 지금 보내기: 요청 안에서 1회 시도, 실패하면 queued 유지
+    if not scheduled_at:
+        deliver(msg)  # 지금 보내기: 요청 안에서 1회 시도, 실패하면 queued 유지 → 워커가 재시도
     return msg
 
 
-def deliver(msg: SmsMessage) -> bool:
-    """1건 발송 시도. 선점(sending) → 결과 반영 → 로그."""
-    if msg.status not in ("queued", "scheduled"):
-        return msg.status == "sent"
-    msg.status = "sending"
-    msg.attempts += 1
+def _claim(msg_id: int) -> bool:
+    """대기 상태인 행만 원자적으로 sending 으로 선점."""
+    n = (db.session.query(SmsMessage).filter(SmsMessage.id == msg_id, SmsMessage.status.in_(WAITING))
+         .update({"status": "sending", "attempts": SmsMessage.attempts + 1}, synchronize_session=False))
     db.session.commit()
-    p = provider()
-    ok, pid, err = p.send(msg.to_phone, msg.from_phone, msg.body, msg.msg_type)
-    msg.provider = p.name
+    return bool(n)
+
+
+def deliver(msg: SmsMessage) -> bool:
+    if not _claim(msg.id):
+        db.session.refresh(msg)
+        return msg.status == "sent"
+    db.session.refresh(msg)
+    ok, pid, err = False, None, None
+    try:
+        p = provider()
+        msg.provider = p.name
+        ok, pid, err = p.send(msg.to_phone, msg.from_phone, msg.body, msg.msg_type)
+    except Exception as e:  # 발송사 설정 오류·네트워크 예외 → 실패로 기록, sending 고착 방지
+        err = f"{type(e).__name__}: {e}"[:500]
     if ok:
         msg.status, msg.provider_msg_id, msg.sent_at, msg.error = "sent", pid, now_kst(), None
-        if msg.is_auto and msg.inquiry_id:
-            pass  # 자동문자는 접수 시 이미 로그됨
     else:
         msg.error = err
         msg.status = "failed" if msg.attempts >= MAX_ATTEMPTS else ("scheduled" if msg.scheduled_at else "queued")
         if msg.inquiry_id:
             inq = db.session.get(Inquiry, msg.inquiry_id)
-            inq_svc.log(inq, None, "system", f"문자 발송 실패: {err}" + (" (재시도 예정)" if msg.status != "failed" else ""),
+            inq_svc.log(inq, None, "system", f"문자 발송 실패: {err}" + ("" if msg.status == "failed" else " (재시도 예정)"),
                         {"sms_id": msg.id})
     db.session.commit()
     return ok
@@ -82,29 +92,20 @@ def deliver(msg: SmsMessage) -> bool:
 def run_worker(limit: int = 200) -> dict:
     """crontab 1분 주기. queued 전부 + scheduled_at <= now 인 scheduled."""
     now = now_kst()
-    ids = [m.id for m in SmsMessage.query.filter(
-        or_(SmsMessage.status == "queued", (SmsMessage.status == "scheduled") & (SmsMessage.scheduled_at <= now)))
-        .order_by(SmsMessage.id).limit(limit)]
+    msgs = SmsMessage.query.filter(
+        or_(SmsMessage.status == "queued", (SmsMessage.status == "scheduled") & (SmsMessage.scheduled_at <= now))
+    ).order_by(SmsMessage.id).limit(limit).all()
     sent = failed = 0
-    for mid in ids:
-        # 동시 실행 대비: status가 아직 대기 상태인 행만 선점 (UPDATE ... WHERE status IN (...))
-        claimed = db.session.query(SmsMessage).filter(SmsMessage.id == mid, SmsMessage.status.in_(["queued", "scheduled"])) \
-            .update({"status": "sending", "attempts": SmsMessage.attempts + 1}, synchronize_session=False)
-        db.session.commit()
-        if not claimed:
-            continue
-        msg = db.session.get(SmsMessage, mid)
-        msg.status = "queued" if not msg.scheduled_at else "scheduled"
-        msg.attempts -= 1  # deliver()가 다시 올림
-        if deliver(msg):
+    for m in msgs:
+        if deliver(m):
             sent += 1
-        elif msg.status == "failed":
+        elif m.status == "failed":
             failed += 1
-    return {"picked": len(ids), "sent": sent, "failed": failed}
+    return {"picked": len(msgs), "sent": sent, "failed": failed}
 
 
 def cancel(msg: SmsMessage, user: User) -> None:
-    if msg.status not in ("queued", "scheduled"):
+    if msg.status not in WAITING:
         raise SmsError("대기 중인 문자만 취소할 수 있습니다")
     msg.status = "canceled"
     if msg.inquiry_id:

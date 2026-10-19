@@ -45,18 +45,6 @@ def detect_device(ua: str) -> str:
     return "pc"
 
 
-def sms_bytes(body: str) -> int:
-    return len(body.encode("cp949", errors="replace"))
-
-
-def render_template(body: str, **vars) -> str:
-    mapping = {"이름": vars.get("name", ""), "사이트": vars.get("site", ""), "담당자": vars.get("assignee", ""),
-               "대표번호": vars.get("phone", ""), "콜백일시": vars.get("callback", "")}
-    for k, v in mapping.items():
-        body = body.replace("{" + k + "}", str(v))
-    return body
-
-
 def validate(data: dict) -> dict:
     """필수·형식 검사. 통과하면 정규화된 dict 반환."""
     name = (data.get("name") or "").strip()
@@ -119,11 +107,12 @@ def intake(site: Site, data: dict, *, ip: str | None = None, user_agent: str | N
     queued = False
     tpl = auto_reply_template(site) if site.auto_reply and not recent_same_site else None
     if tpl:
-        body = render_template(tpl.body, name=inq.customer_name, site=site.name, phone=company_phone)
+        from .template import msg_type, render, sms_bytes
+        body = render(tpl.body, name=inq.customer_name, site_name=site.name, company_phone=company_phone)
         n = sms_bytes(body)
         db.session.add(SmsMessage(inquiry_id=inq.id, site_id=site.id, to_phone=inq.phone,
                                   from_phone=site.sender_number or default_sender, body=body,
-                                  msg_type="LMS" if n > 90 else "SMS", byte_len=n, status="queued", is_auto=True,
+                                  msg_type=msg_type(body), byte_len=n, status="queued", is_auto=True,
                                   created_at=now))
         db.session.add(InquiryLog(inquiry_id=inq.id, kind="sms", body=body, meta_json={"auto": True}, created_at=now))
         queued = True
