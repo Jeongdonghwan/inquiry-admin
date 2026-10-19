@@ -22,7 +22,7 @@
       <a href="#">문자 발송내역</a>
       <a href="#">문자 템플릿</a>
       <a href="#">통계 · 유입분석</a>
-      <a href="#">사이트 · 폼 연동</a>
+      <a href="{{ url_for('settings.sites') }}" class="{{ 'on' if p.startswith('/settings/sites') }}">사이트 · 폼 연동</a>
       {% if current_user.is_admin %}<a href="#">직원 · 권한</a>{% endif %}
     </div>
     <div class="nav">

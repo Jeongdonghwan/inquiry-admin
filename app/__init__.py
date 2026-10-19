@@ -26,12 +26,17 @@ def create_app(config_object=Config) -> Flask:
     limiter.init_app(app)
 
     from . import models  # noqa: F401  (모델 등록)
+    from .blueprints.api import bp as api_bp
     from .blueprints.auth import bp as auth_bp
     from .blueprints.inquiries import bp as inquiries_bp
+    from .blueprints.settings import bp as settings_bp
     from .cli import register_cli
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(inquiries_bp)
+    app.register_blueprint(settings_bp)
+    app.register_blueprint(api_bp)
+    csrf.exempt(api_bp)  # 외부 사이트 접수 API는 키 인증
     register_cli(app)
 
     @app.route("/")

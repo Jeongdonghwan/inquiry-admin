@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ site.name or '사이트 추가' }} · 상담관리{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div class="title"><h1>{{ site.name or '사이트 추가' }}</h1><span class="sub"><a href="{{ url_for('settings.sites') }}">사이트 · 폼 연동</a> › {{ '설정' if site.id else '추가' }}</span></div>
+  {% if site.id %}
+  <form method="post" action="{{ url_for('settings.test_inquiry', site_id=site.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn">테스트 문의 보내기</button></form>
+  {% endif %}
+</header>
+<div class="content">
+  <form method="post" class="panel form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% with msgs = get_flashed_messages() %}{% for m in msgs %}<div class="flash">{{ m }}</div>{% endfor %}{% endwith %}
+    <label>코드<input name="code" value="{{ site.code or '' }}" placeholder="rm" pattern="[a-z0-9_-]{2,30}" required {{ 'readonly' if site.id }}><small>URL·키에 쓰이는 짧은 영문. 저장 후 변경 불가</small></label>
+    <label>이름<input name="name" value="{{ site.name or '' }}" placeholder="법률사무소 알엠" required></label>
+    <label>업종<select name="category">{% for k, v in categories.items() %}<option value="{{ k }}" {{ 'selected' if site.category == k }}>{{ v }}</option>{% endfor %}</select></label>
+    <label>색<input type="color" name="color" value="{{ site.color or '#475569' }}"><small>목록에서 사이트를 구분하는 점 색</small></label>
+    <label>도메인<input name="domain" value="{{ site.domain or '' }}" placeholder="example.co.kr"></label>
+    <label>허용 Origin<textarea name="allowed_origins" rows="3" placeholder="https://example.co.kr&#10;https://www.example.co.kr">{{ site.allowed_origins or '' }}</textarea><small>브라우저에서 직접 전송하는 사이트만. 한 줄에 하나</small></label>
+    <label>발신번호<input name="sender_number" value="{{ site.sender_number or '' }}" placeholder="0310000000"><small>문자발송사에 사전 등록된 번호만 사용 가능</small></label>
+    <label class="check"><input type="checkbox" name="auto_reply" {{ 'checked' if site.auto_reply }}> 접수확인 자동문자</label>
+    <label>보관일수<input name="retention_days" type="number" min="30" value="{{ site.retention_days or 365 }}"><small>종결·계약 후 개인정보 마스킹까지</small></label>
+    <label class="check"><input type="checkbox" name="is_active" {{ 'checked' if site.is_active }}> 사용</label>
+    <div class="row"><button class="btn primary">저장</button><a class="btn" href="{{ url_for('settings.sites') }}">취소</a></div>
+  </form>
+
+  {% if snippet %}
+  <section class="panel form snippets">
+    <h3>연동 방법</h3>
+    <p class="muted">접수 주소 <span class="mono">{{ snippet.base }}/api/v1/inquiries</span> · 공개키 <span class="mono">{{ site.public_key }}</span></p>
+    <h4>① 서버→서버 (Flask 등 서버가 있는 사이트, 권장)</h4>
+    <pre><code>{{ snippet.server }}</code></pre>
+    <h4>② 브라우저 직접 전송 (정적·빌더 사이트)</h4>
+    <p class="muted small">위 「허용 Origin」에 사이트 주소를 넣어야 동작합니다.</p>
+    <pre><code>{{ snippet.browser }}</code></pre>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

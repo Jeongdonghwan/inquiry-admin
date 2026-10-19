@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}사이트 · 폼 연동 · 상담관리{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div class="title"><h1>사이트 · 폼 연동</h1><span class="sub">문의를 보내는 홈페이지와 접수 키를 관리합니다</span></div>
+  <a class="btn primary" href="{{ url_for('settings.site_form') }}">사이트 추가</a>
+</header>
+<div class="content col">
+  {% with msgs = get_flashed_messages() %}{% for m in msgs %}<div class="flash">{{ m }}</div>{% endfor %}{% endwith %}
+  {% if new_secret %}
+  <div class="panel secret">
+    <b>{{ new_secret.code }} 사이트 비밀키 (지금 한 번만 표시됩니다)</b>
+    <code>{{ new_secret.secret }}</code>
+    <span class="muted">홈페이지 서버의 환경변수(<span class="mono">SITE_SECRET</span>)에 넣으세요. 잃어버리면 재발급해야 합니다.</span>
+  </div>
+  {% endif %}
+  <section class="panel table">
+    <div class="thead cols-sites"><span>코드</span><span>사이트</span><span>업종</span><span>자동문자</span><span>보관</span><span>문의</span><span>공개키</span><span></span></div>
+    {% for s, n in rows %}
+    <div class="trow cols-sites {{ '' if s.is_active else 'off' }}">
+      <span class="mono">{{ s.code }}</span>
+      <span class="site"><i class="dot" style="background:{{ s.color }}"></i>{{ s.name }}{% if not s.is_active %} <em class="muted">(비활성)</em>{% endif %}</span>
+      <span>{{ {'legal':'법률','labor':'인사·노무'}[s.category] }}</span>
+      <span>{{ '켜짐' if s.auto_reply else '꺼짐' }}</span>
+      <span class="mono">{{ s.retention_days }}일</span>
+      <span class="mono">{{ n }}</span>
+      <span class="mono ellipsis" title="{{ s.public_key }}">{{ s.public_key[:10] }}…</span>
+      <span class="actions">
+        <a class="btn sm" href="{{ url_for('settings.site_form', site_id=s.id) }}">설정</a>
+        <form method="post" action="{{ url_for('settings.reissue', site_id=s.id) }}" onsubmit="return confirm('키를 재발급하면 기존 연동이 끊깁니다. 계속할까요?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn sm">키 재발급</button></form>
+      </span>
+    </div>
+    {% endfor %}
+  </section>
+  <p class="muted small">개인정보처리방침(수집 항목·보관기간·위탁: 문자발송사)은 각 홈페이지에 게시해야 합니다.</p>
+</div>
+{% endblock %}

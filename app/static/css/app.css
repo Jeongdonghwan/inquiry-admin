@@ -44,6 +44,31 @@ input,textarea,select,button{font-family:inherit;font-size:inherit}
 .empty-note{flex:1;padding:40px;text-align:center;color:var(--muted)}
 .menu-toggle{display:none}
 
+/* ---- 설정 화면 ---- */
+.content.col{flex-direction:column;flex-wrap:nowrap}
+.flash{background:#e7eefc;color:#1a43ad;border:1px solid #c7d4f7;padding:10px 14px;border-radius:var(--radius);font-size:13px}
+.panel.secret{padding:16px 20px;display:flex;flex-direction:column;gap:8px;border-color:var(--accent)}
+.panel.secret code{font-family:var(--mono);font-size:14px;background:#fff7ed;padding:8px 12px;border-radius:var(--radius);word-break:break-all;user-select:all}
+.table .thead,.table .trow{display:grid;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line-soft)}
+.table .thead{font-size:12px;color:var(--muted);background:#f7f8fa;border-bottom:1px solid var(--line)}
+.table .trow.off{color:var(--muted)}
+.cols-sites{grid-template-columns:60px minmax(160px,1fr) 80px 70px 60px 50px 110px 170px}
+.table .site{display:flex;align-items:center;gap:8px}
+.table .actions{display:flex;gap:6px;justify-content:flex-end}
+.btn.sm{height:30px;padding:0 10px;font-size:12px}
+.panel.form{flex:1 1 420px;max-width:560px;padding:24px;display:flex;flex-direction:column;gap:14px}
+.panel.form label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
+.panel.form label.check{flex-direction:row;align-items:center;gap:8px;color:var(--text)}
+.panel.form input:not([type=checkbox]):not([type=color]),.panel.form select,.panel.form textarea{height:38px;border:1px solid #cfd4dc;border-radius:var(--radius);padding:0 10px;color:var(--text);font-size:14px}
+.panel.form textarea{height:auto;padding:8px 10px;font-family:var(--mono);font-size:13px}
+.panel.form input[type=color]{width:60px;height:34px;padding:0;border:1px solid #cfd4dc;border-radius:var(--radius)}
+.panel.form input[readonly]{background:#f3f4f6}
+.panel.form small{font-size:12px;color:#8a93a6}
+.panel.form .row{display:flex;gap:8px;margin-top:8px}
+.snippets h3{margin:0;font-size:16px}.snippets h4{margin:10px 0 0;font-size:13px}
+.snippets pre{margin:0;background:#1c2230;color:#e6e9f0;padding:14px;border-radius:var(--radius);font-size:12px;overflow-x:auto;white-space:pre-wrap}
+.small{font-size:12px}
+
 /* ---- 로그인 ---- */
 .login-body{display:grid;place-items:center;min-height:100vh;margin:0}
 .login-box{width:360px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:32px;display:flex;flex-direction:column;gap:16px}
