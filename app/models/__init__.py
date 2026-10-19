@@ -18,7 +18,7 @@ STATUS_LABELS = {
 }
 STATUSES = list(STATUS_LABELS)
 CLOSE_REASONS = ["부재 지속", "비용 불일치", "타사 선택", "상담 불가 사건", "허위·스팸", "기타"]
-CATEGORIES = {"legal": "법률", "franchise": "프랜차이즈"}
+CATEGORIES = {"legal": "법률", "labor": "인사·노무"}
 ROLES = ("admin", "manager", "agent")
 LOG_KINDS = ("received", "call", "call_missed", "memo", "sms", "status", "assign", "callback", "sheet", "system")
 

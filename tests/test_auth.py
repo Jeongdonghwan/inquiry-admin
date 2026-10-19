@@ -31,7 +31,7 @@ def test_agent_does_not_see_staff_menu(client, login):
 
 def test_agent_sidebar_only_own_sites(login):
     r = login("oh")
-    assert "바삭한형제 가맹".encode() in r.data
+    assert "노무 상담센터".encode() in r.data
     assert "회생파산 상담센터".encode() not in r.data
 
 
@@ -45,7 +45,7 @@ def test_can_access_rules(app):
     yoon = User.query.filter_by(login_id="yoon").one()
     oh = User.query.filter_by(login_id="oh").one()
     hs = Site.query.filter_by(code="hs").one()
-    cb = Site.query.filter_by(code="cb").one()
+    cb = Site.query.filter_by(code="nm").one()
     hs_inq = Inquiry.query.filter_by(site_id=hs.id).first()
     cb_unassigned = Inquiry.query.filter_by(site_id=cb.id, assignee_id=None).first()
     cb_other = Inquiry(site_id=cb.id, assignee_id=yoon.id, customer_name="x", phone="01000000000",

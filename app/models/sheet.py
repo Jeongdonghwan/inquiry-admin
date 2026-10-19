@@ -9,7 +9,7 @@ class ConsultForm(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
-    category = db.Column(db.String(20))  # legal | franchise | NULL(공통)
+    category = db.Column(db.String(20))  # legal | labor | NULL(공통)
     inquiry_type_keys = db.Column(db.JSON, nullable=False)
     schema_json = db.Column(db.JSON, nullable=False)
     version = db.Column(db.Integer, nullable=False, default=1)

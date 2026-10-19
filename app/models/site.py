@@ -12,7 +12,7 @@ class Site(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(30), nullable=False, unique=True)
     name = db.Column(db.String(100), nullable=False)
-    category = db.Column(db.String(20), nullable=False)  # legal | franchise
+    category = db.Column(db.String(20), nullable=False)  # legal | labor
     color = db.Column(db.String(7), nullable=False, default="#475569")
     domain = db.Column(db.String(255))
     allowed_origins = db.Column(db.Text)  # 줄바꿈 구분
