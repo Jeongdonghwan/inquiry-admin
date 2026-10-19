@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}문자 템플릿 · 상담관리{% endblock %}
+{% block content %}
+<header class="topbar"><div class="title"><h1>{{ t.name or '템플릿 추가' }}</h1><span class="sub"><a href="{{ url_for('settings.templates') }}">문자 템플릿</a> › {{ '수정' if t.id else '추가' }}</span></div></header>
+<div class="content">
+  <form method="post" class="panel form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% with msgs = get_flashed_messages() %}{% for m in msgs %}<div class="flash err">{{ m }}</div>{% endfor %}{% endwith %}
+    <label>이름<input name="name" value="{{ t.name or '' }}" required maxlength="50"></label>
+    <label>적용 범위<select name="scope">
+      <option value="all" {{ 'selected' if not t.site_id and not t.category }}>전체 공통</option>
+      {% for k, v in cats.items() %}<option value="cat:{{ k }}" {{ 'selected' if t.category == k }}>{{ v }} 업종만</option>{% endfor %}
+      {% for s in sites %}<option value="site:{{ s.id }}" {{ 'selected' if t.site_id == s.id }}>{{ s.name }}만</option>{% endfor %}
+    </select></label>
+    <label>내용<textarea name="body" rows="6" id="tpl-body" required>{{ t.body or '' }}</textarea><small>변수: {이름} {사이트} {담당자} {대표번호} {콜백일시}</small></label>
+    <div class="tpl-preview"><div class="lbl">미리보기</div><pre id="tpl-prev" class="pre"></pre><span class="muted small" id="tpl-bytes"></span></div>
+    <label class="check"><input type="checkbox" name="is_auto_reply" {{ 'checked' if t.is_auto_reply }}> 접수확인 자동문자로 사용</label>
+    <label class="check"><input type="checkbox" name="is_active" {{ 'checked' if t.is_active }}> 사용</label>
+    <div class="row"><button class="btn primary">저장</button><a class="btn" href="{{ url_for('settings.templates') }}">취소</a></div>
+  </form>
+</div>
+<script>
+const ta = document.getElementById('tpl-body'), prev = document.getElementById('tpl-prev'), by = document.getElementById('tpl-bytes');
+let t; const upd = () => { clearTimeout(t); t = setTimeout(async () => {
+  const r = await fetch('{{ url_for("settings.template_preview") }}?body=' + encodeURIComponent(ta.value)); const j = await r.json();
+  prev.textContent = j.text; by.textContent = `${j.bytes} byte · ${j.bytes > 90 ? 'LMS 장문' : 'SMS 단문'}` + (j.unresolved.length ? ` · 알 수 없는 변수: {${j.unresolved.join('} {')}}` : '');
+}, 300); };
+ta.addEventListener('input', upd); upd();
+</script>
+{% endblock %}

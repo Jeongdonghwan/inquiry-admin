@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}직원 · 권한 · 상담관리{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div class="title"><h1>직원 · 권한</h1><span class="sub">admin 전부 · manager 담당 사이트 전부 · agent 담당 사이트 중 본인 배정 + 미배정</span></div>
+  <a class="btn" href="{{ url_for('settings.access_logs') }}">개인정보 조회 이력</a>
+  <a class="btn primary" href="{{ url_for('settings.user_form') }}">직원 추가</a>
+</header>
+<div class="content col">
+  {% with msgs = get_flashed_messages() %}{% for m in msgs %}<div class="flash">{{ m }}</div>{% endfor %}{% endwith %}
+  {% if new_pw %}<div class="panel secret"><b>임시 비밀번호 (지금 한 번만 표시)</b><code>{{ new_pw }}</code><span class="muted">직원에게 전달하고 첫 로그인 후 변경하도록 안내하세요.</span></div>{% endif %}
+  <section class="panel table">
+    <div class="thead cols-users"><span>아이디</span><span>이름</span><span>역할</span><span>담당 사이트</span><span>최근 로그인</span><span>상태</span><span></span></div>
+    {% for u in rows %}
+    <div class="trow cols-users {{ '' if u.is_active else 'off' }}">
+      <span class="mono">{{ u.login_id }}</span>
+      <span><b>{{ u.name }}</b> <span class="muted small">{{ u.title or '' }}</span></span>
+      <span>{{ roles[u.role] }}</span>
+      <span class="small">{% if u.is_admin %}전체{% else %}{{ u.sites|map(attribute='name')|join(', ') or '—' }}{% endif %}</span>
+      <span class="mono">{{ u.last_login_at|kdate if u.last_login_at else '—' }}</span>
+      <span>{{ '사용' if u.is_active else '비활성' }}{% if u.locked_until and u.locked_until > today %} · <em class="warn small">잠김</em>{% endif %}</span>
+      <span class="actions">
+        <a class="btn sm" href="{{ url_for('settings.user_form', uid=u.id) }}">수정</a>
+        <form method="post" action="{{ url_for('settings.user_reset_pw', uid=u.id) }}" onsubmit="return confirm('비밀번호를 초기화할까요?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn sm">비밀번호 초기화</button></form>
+        {% if u.id != current_user.id %}<form method="post" action="{{ url_for('settings.user_toggle', uid=u.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn sm">{{ '비활성화' if u.is_active else '활성화' }}</button></form>{% endif %}
+      </span>
+    </div>
+    {% endfor %}
+  </section>
+</div>
+{% endblock %}

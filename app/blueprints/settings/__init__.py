@@ -119,3 +119,6 @@ document.getElementById('consult').addEventListener('submit', async e => {{
 }});
 </script>'''
     return {"server": server, "browser": browser, "base": base}
+
+
+from . import forms_bp, templates_bp, users_bp  # noqa: E402,F401  (라우트 등록)

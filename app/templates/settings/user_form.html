@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}직원 · 상담관리{% endblock %}
+{% block content %}
+<header class="topbar"><div class="title"><h1>{{ u.name or '직원 추가' }}</h1><span class="sub"><a href="{{ url_for('settings.users') }}">직원 · 권한</a> › {{ '수정' if u.id else '추가' }}</span></div></header>
+<div class="content">
+  <form method="post" class="panel form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% with msgs = get_flashed_messages() %}{% for m in msgs %}<div class="flash err">{{ m }}</div>{% endfor %}{% endwith %}
+    <div class="two"><label>아이디<input name="login_id" value="{{ u.login_id or '' }}" required pattern="[a-z0-9_.\-]{3,50}" {{ 'readonly' if u.id }}></label>
+      <label>이름<input name="name" value="{{ u.name or '' }}" required></label></div>
+    <div class="two"><label>직함<input name="title" value="{{ u.title or '' }}" placeholder="팀장"></label><label>연락처<input name="phone" value="{{ u.phone or '' }}"></label></div>
+    <label>역할<select name="role">{% for k, v in roles.items() %}<option value="{{ k }}" {{ 'selected' if u.role == k }}>{{ v }}</option>{% endfor %}</select></label>
+    {% if not u.id %}<label>비밀번호 <small>비우면 임시 비밀번호를 자동 생성해 한 번 보여줍니다</small><input name="password" type="password" autocomplete="new-password"></label>{% endif %}
+    <fieldset class="sites-pick"><legend class="small muted">담당 사이트 (관리자는 전체)</legend>
+      {% for s in sites %}<label class="check"><input type="checkbox" name="sites" value="{{ s.id }}" {{ 'checked' if s in u.sites }}><i class="dot" style="background:{{ s.color }}"></i>{{ s.name }}</label>{% endfor %}
+    </fieldset>
+    <label class="check"><input type="checkbox" name="is_active" {{ 'checked' if u.is_active or not u.id }}> 사용</label>
+    <div class="row"><button class="btn primary">저장</button><a class="btn" href="{{ url_for('settings.users') }}">취소</a></div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+<button type="button" class="rowbtn cols-inq {{ 'on' if r.id == selected_id }} st-{{ r.status }}" data-id="{{ r.id }}" data-status="{{ r.status }}">
+  <span><span class="pill {{ r.status }}">{{ STATUS_LABELS[r.status] }}</span></span>
+  <span class="mono">{% if request.args.get('cb') == 'today' %}<span class="{{ 'overdue' if r.callback_at and r.callback_at < today }}">{{ r.callback_at|kdate }}</span>{% else %}{{ r.received_at|kdate }}{% endif %}</span>
+  <span class="site"><i class="dot" style="background:{{ r.site.color }}"></i><span class="ellipsis">{{ r.site.name }}</span></span>
+  <span class="who">
+    <span class="line1"><b>{{ r.customer_name }}</b><span class="type">{{ r.inquiry_type or '' }}</span>{% if r.duplicate_of_id %}<em class="tag">중복</em>{% endif %}{% if r.callback_at and request.args.get('cb') != 'today' %}<em class="tag cb">콜백 {{ r.callback_at|kdate }}</em>{% endif %}</span>
+    <span class="preview ellipsis">{{ (r.message or '')|replace('\n', ' ') }}</span>
+  </span>
+  <span class="mono">{{ r.phone|phone }}</span>
+  <span class="{{ 'unassigned' if not r.assignee }}">{{ r.assignee.name if r.assignee else '미배정' }}</span>
+</button>

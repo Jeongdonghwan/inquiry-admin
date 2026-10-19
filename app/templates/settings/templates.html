@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}문자 템플릿 · 상담관리{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div class="title"><h1>문자 템플릿</h1><span class="sub">변수: {이름} {사이트} {담당자} {대표번호} {콜백일시} · 광고성 문구는 만들지 않습니다</span></div>
+  <a class="btn primary" href="{{ url_for('settings.template_form') }}">템플릿 추가</a>
+</header>
+<div class="content col">
+  {% with msgs = get_flashed_messages() %}{% for m in msgs %}<div class="flash">{{ m }}</div>{% endfor %}{% endwith %}
+  <section class="panel table">
+    <div class="thead cols-tpl"><span>순서</span><span>이름</span><span>적용 범위</span><span>미리보기 (홍길동 · 법률사무소 알엠)</span><span>길이</span><span>자동</span><span></span></div>
+    {% for t in rows %}
+    <div class="trow cols-tpl {{ '' if t.is_active else 'off' }}">
+      <span class="row">
+        <form method="post" action="{{ url_for('settings.template_move', tid=t.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="dir" value="up"><button class="btn sm" {{ 'disabled' if loop.first }}>▲</button></form>
+        <form method="post" action="{{ url_for('settings.template_move', tid=t.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="dir" value="down"><button class="btn sm" {{ 'disabled' if loop.last }}>▼</button></form>
+      </span>
+      <span><b>{{ t.name }}</b>{% if not t.is_active %} <em class="muted small">(사용 안 함)</em>{% endif %}</span>
+      <span class="small">{% if t.site_id %}{{ sites[t.site_id].name }}{% elif t.category %}{{ cats[t.category] }}{% else %}전체{% endif %}</span>
+      <span class="small pre">{{ preview[t.id] }}</span>
+      <span class="mono">{{ bytes(preview[t.id]) }}b · {{ 'LMS' if bytes(preview[t.id]) > 90 else 'SMS' }}</span>
+      <span>{{ '접수확인' if t.is_auto_reply else '' }}</span>
+      <span class="actions"><a class="btn sm" href="{{ url_for('settings.template_form', tid=t.id) }}">수정</a>
+        <form method="post" action="{{ url_for('settings.template_delete', tid=t.id) }}" onsubmit="return confirm('삭제할까요?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn sm">삭제</button></form></span>
+    </div>
+    {% endfor %}
+  </section>
+</div>
+{% endblock %}

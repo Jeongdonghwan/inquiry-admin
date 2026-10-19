@@ -1,0 +1,55 @@
+{# B안 서랍 상세: 같은 데이터, 채팅형 타임라인(오래된 것이 위) #}
+<div class="dp drawer-dp" data-id="{{ inq.id }}">
+  <div class="dp-head">
+    <div class="meta"><i class="dot" style="background:{{ inq.site.color }}"></i>{{ inq.site.name }} · {{ {'legal':'법률','labor':'인사·노무'}[inq.site.category] }} · <span class="mono">No.{{ inq.id }}</span></div>
+    <div class="name-row"><div><span class="name">{{ inq.customer_name }}</span><span class="type">{{ inq.inquiry_type or '' }}</span></div><a class="btn sm" href="tel:{{ inq.phone }}" data-call>전화 걸기 <span class="mono">{{ inq.phone|phone }}</span></a></div>
+  </div>
+  {% if dups %}<div class="dup-band">같은 연락처 문의 {{ dups|length }}건 · {% for d in dups %}<a href="#" data-pick="{{ d.id }}">No.{{ d.id }}</a>{{ ' · ' if not loop.last }}{% endfor %}</div>{% endif %}
+
+  <div class="steps" data-status-group>
+    {% for s in ('new','contacting','consulted','contracted') %}<button type="button" class="{{ 'on' if inq.status == s }} {{ 'done' if ['new','contacting','consulted','contracted'].index(inq.status) > loop.index0 if inq.status in ['new','contacting','consulted','contracted'] else '' }}" data-status="{{ s }}"><i>{{ loop.index }}</i>{{ STATUS_LABELS[s] }}</button>{% endfor %}
+    <span class="side"><button type="button" class="btn sm {{ 'on' if inq.status == 'hold' }}" data-status="hold">보류</button><button type="button" class="btn sm {{ 'on' if inq.status == 'closed' }}" data-status="closed">종결 처리</button></span>
+  </div>
+  <div class="close-reason" hidden>
+    <select data-close-reason>{% for r in close_reasons %}<option>{{ r }}</option>{% endfor %}</select>
+    <input data-close-other placeholder="기타 사유 입력" hidden>
+    <button type="button" class="btn sm primary" data-close-confirm>종결 처리</button><button type="button" class="btn sm" data-close-cancel>취소</button>
+  </div>
+
+  <div class="dp-grid three">
+    <label>담당<select data-assign><option value="">미배정</option>{% for u in users %}<option value="{{ u.id }}" {{ 'selected' if inq.assignee_id == u.id }}>{{ u.display }}</option>{% endfor %}</select></label>
+    <label>콜백<span class="cb-row"><input type="datetime-local" data-callback value="{{ inq.callback_at.strftime('%Y-%m-%dT%H:%M') if inq.callback_at }}"><button type="button" class="btn sm" data-callback-clear>×</button></span></label>
+    <div><span class="k">지역</span>{{ inq.region or '—' }}</div>
+    <div><span class="k">접수</span><span class="mono">{{ inq.received_at|kdate }}</span></div>
+    <div><span class="k">기기</span>{{ {'mobile':'모바일','pc':'PC','tablet':'태블릿'}.get(inq.device, '—') }}</div>
+    <div><span class="k">유입 키워드</span>{{ inq.utm_term or '—' }}</div>
+  </div>
+  <blockquote class="quote">“{{ inq.message or '(내용 없음)' }}”</blockquote>
+
+  <div class="timeline">
+    {% for lg in logs|reverse %}
+      {% if lg.kind == 'sms' %}<div class="tl sms {{ 'auto' if not lg.user_id }}"><span class="bubble">{{ lg.body }}</span><span class="when mono">{{ lg.created_at|kdate }} · {{ lg.user.display if lg.user else '자동발송' }}</span></div>
+      {% elif lg.kind in ('call','call_missed') %}<div class="tl call"><span class="ico">☎</span><span>{{ lg.body }}</span><span class="when mono">{{ lg.user.display if lg.user else '' }} · {{ lg.created_at|kdate }}</span></div>
+      {% elif lg.kind == 'memo' %}<div class="tl memo"><span class="box">{{ lg.body }}</span><span class="when mono">메모 · {{ lg.user.display if lg.user else '' }} · {{ lg.created_at|kdate }}</span></div>
+      {% else %}<div class="tl sys mono">{{ lg.created_at|kdate }} · {{ lg.body }}</div>{% endif %}
+    {% endfor %}
+  </div>
+
+  <div class="composer">
+    <div class="seg sm"><button type="button" class="on" data-ctab="memo">메모</button><button type="button" data-ctab="sms">문자</button></div>
+    <div data-cpane="memo" class="tabpane">
+      <textarea data-memo rows="2" placeholder="메모 또는 통화 내용"></textarea>
+      <div class="row"><button type="button" class="btn sm" data-record="call">통화 완료</button><button type="button" class="btn sm" data-record="call_missed">부재중</button><button type="button" class="btn sm primary" data-record="memo">메모 등록</button></div>
+    </div>
+    <div data-cpane="sms" class="tabpane" hidden>
+      <div class="tpls">{% for t in templates %}<button type="button" class="btn sm" data-tpl="{{ t.body }}">{{ t.name }}</button>{% endfor %}</div>
+      <textarea data-sms rows="4" placeholder="문자 내용"></textarea>
+      <div class="sms-foot"><span class="muted small"><span data-bytes>0</span> byte · <span data-smstype>SMS 단문</span></span><span class="row"><input type="datetime-local" data-sms-at><button type="button" class="btn sm" data-sms-send="scheduled">예약</button><button type="button" class="btn sm primary" data-sms-send="now">보내기</button></span></div>
+      <div class="sent-note" hidden>발송 완료 · 상담 기록에 저장되었습니다.</div>
+    </div>
+  </div>
+  <div class="tabpane" data-pane="sheet" hidden></div><div class="dp-tabs" hidden><button data-tab="sheet"></button></div>
+</div>
+<script>
+(() => { const dp = document.currentScript.previousElementSibling; dp.querySelectorAll('[data-ctab]').forEach(b => b.onclick = () => { dp.querySelectorAll('[data-ctab]').forEach(x => x.classList.toggle('on', x === b)); dp.querySelectorAll('[data-cpane]').forEach(p => p.hidden = p.dataset.cpane !== b.dataset.ctab); }); })();
+</script>

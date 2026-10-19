@@ -28,16 +28,28 @@ def create_app(config_object=Config) -> Flask:
     from . import models  # noqa: F401  (모델 등록)
     from .blueprints.api import bp as api_bp
     from .blueprints.auth import bp as auth_bp
+    from .blueprints.board import bp as board_bp
+    from .blueprints.export import bp as export_bp
     from .blueprints.inquiries import bp as inquiries_bp
     from .blueprints.settings import bp as settings_bp
+    from .blueprints.sheet import bp as sheet_bp
+    from .blueprints.sms import bp as sms_bp
+    from .blueprints.stats import bp as stats_bp
     from .cli import register_cli
 
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(inquiries_bp)
-    app.register_blueprint(settings_bp)
-    app.register_blueprint(api_bp)
+    for b in (auth_bp, inquiries_bp, sheet_bp, board_bp, export_bp, sms_bp, stats_bp, settings_bp, api_bp):
+        app.register_blueprint(b)
     csrf.exempt(api_bp)  # 외부 사이트 접수 API는 키 인증
     register_cli(app)
+
+    @app.after_request
+    def security_headers(resp):
+        resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+        resp.headers.setdefault("X-Frame-Options", "DENY")
+        resp.headers.setdefault("Referrer-Policy", "same-origin")
+        if app.config.get("ENV") == "production":
+            resp.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
+        return resp
 
     @app.route("/")
     def index():

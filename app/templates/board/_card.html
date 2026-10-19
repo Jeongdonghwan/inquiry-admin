@@ -1,0 +1,12 @@
+{% set last = (it.logs|sort(attribute='created_at')|last) if it.logs else none %}
+{% set show = it.message if (not last or last.kind in ('received', 'sms') and (not last.user_id)) else last.body %}
+<article class="card {{ 'on' if selected and selected.id == it.id }}" data-id="{{ it.id }}" data-status="{{ it.status }}" tabindex="0">
+  <div class="c-meta"><i class="dot" style="background:{{ it.site.color }}"></i><span class="ellipsis">{{ it.site.name }}</span><span class="mono">{{ it.received_at|kdate }}</span></div>
+  <div class="c-name"><b>{{ it.customer_name }}</b><span class="muted">{{ it.inquiry_type or '' }}</span></div>
+  <div class="c-last">{{ (show or '')|truncate(70) }}</div>
+  <div class="c-tags">
+    <span class="tag {{ 'owner' if it.assignee }}">{{ it.assignee.name if it.assignee else '미배정' }}</span>
+    {% if it.callback_at %}<span class="tag cb">콜백 {{ it.callback_at|kdate }}</span>{% endif %}
+    {% if it.duplicate_of_id %}<span class="tag">중복</span>{% endif %}
+  </div>
+</article>

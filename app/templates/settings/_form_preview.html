@@ -1,0 +1,8 @@
+{% from "inquiries/_sheet_field.html" import field %}
+<form class="sheet-form preview" onsubmit="return false">
+  {% for sec in form.schema_json.sections %}
+  <fieldset class="sheet-sec"><legend>{{ sec.title or '(제목 없음)' }}</legend>
+    {% for f in sec.fields %}{% if f.key and f.type %}{{ field(f, answers) }}{% endif %}{% endfor %}
+  </fieldset>
+  {% endfor %}
+</form>

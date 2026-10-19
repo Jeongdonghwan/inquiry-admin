@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}상담지 양식 · 상담관리{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div class="title"><h1>상담지 양식</h1><span class="sub">사건 유형별 상담 항목. 문의의 유형 문자열에 매칭 유형이 포함되면 자동 선택됩니다</span></div>
+  <a class="btn primary" href="{{ url_for('settings.form_builder') }}">양식 추가</a>
+</header>
+<div class="content col">
+  {% with msgs = get_flashed_messages() %}{% for m in msgs %}<div class="flash">{{ m }}</div>{% endfor %}{% endwith %}
+  <section class="panel table">
+    <div class="thead cols-forms"><span>양식명</span><span>업종</span><span>매칭 유형</span><span>필드</span><span>작성 건수</span><span>버전</span><span>사용</span><span></span></div>
+    {% for f in rows %}
+    <div class="trow cols-forms {{ '' if f.is_active else 'off' }}">
+      <span><b>{{ f.name }}</b></span>
+      <span>{{ cats.get(f.category, '공통') }}</span>
+      <span class="small">{{ f.inquiry_type_keys|join(', ') }}</span>
+      <span class="mono">{{ nfields(f) }}</span>
+      <span class="mono">{{ counts.get(f.id, 0) }}</span>
+      <span class="mono">v{{ f.version }}</span>
+      <span>{{ '사용' if f.is_active else '중지' }}</span>
+      <span class="actions">
+        <a class="btn sm" href="{{ url_for('settings.form_builder', fid=f.id) }}">편집</a>
+        <form method="post" action="{{ url_for('settings.form_duplicate', fid=f.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn sm">복제</button></form>
+        <form method="post" action="{{ url_for('settings.form_toggle', fid=f.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn sm">{{ '중지' if f.is_active else '사용' }}</button></form>
+      </span>
+    </div>
+    {% endfor %}
+  </section>
+  <p class="muted small">법률 항목 명칭은 실무자 확인 후 이 화면에서 수정하세요. 코드 수정 없이 바뀝니다.</p>
+</div>
+{% endblock %}

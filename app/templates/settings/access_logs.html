@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}개인정보 조회 이력 · 상담관리{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div class="title"><h1>개인정보 조회 이력</h1><span class="sub">상세 열람 · 엑셀 다운로드 기록 (총 {{ total }}건)</span></div>
+  <form method="get" class="row"><select name="action" class="sel"><option value="">전체</option>{% for k, v in labels.items() %}<option value="{{ k }}" {{ 'selected' if args.get('action') == k }}>{{ v }}</option>{% endfor %}</select><button class="btn">조회</button></form>
+</header>
+<div class="content col">
+  <section class="panel table">
+    <div class="thead cols-access"><span>일시</span><span>사용자</span><span>행동</span><span>문의</span><span>상세</span><span>IP</span></div>
+    {% for a in rows %}
+    <div class="trow cols-access">
+      <span class="mono">{{ a.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+      <span>{{ users[a.user_id].display if a.user_id in users else a.user_id }}</span>
+      <span>{{ labels.get(a.action, a.action) }}</span>
+      <span>{% if a.inquiry_id %}<a href="{{ url_for('inquiries.list_view', id=a.inquiry_id) }}">No.{{ a.inquiry_id }}</a>{% else %}—{% endif %}</span>
+      <span class="small ellipsis" title="{{ a.detail or '' }}">{{ a.detail or '' }}</span>
+      <span class="mono">{{ a.ip or '' }}</span>
+    </div>
+    {% else %}<div class="empty">기록 없음</div>{% endfor %}
+    {% if total > 100 %}<div class="pager"><span class="pages">{% for p in range(1, (total - 1) // 100 + 2) %}<a class="{{ 'on' if p == page }}" href="{{ url_for('settings.access_logs', page=p, action=args.get('action')) }}">{{ p }}</a>{% endfor %}</span></div>{% endif %}
+  </section>
+</div>
+{% endblock %}

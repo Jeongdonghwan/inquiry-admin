@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}문자 발송내역 · 상담관리{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div class="title"><h1>문자 발송내역</h1><span class="sub">자동·수동 발송 전체 · 예약 취소 · 실패 재발송</span></div>
+  <form method="get" class="row">
+    <select name="period" class="sel"><option value="">기간 전체</option>{% for v,l in (('today','오늘'),('7','7일'),('30','30일')) %}<option value="{{ v }}" {{ 'selected' if args.get('period')==v }}>{{ l }}</option>{% endfor %}</select>
+    <select name="site" class="sel"><option value="">사이트 전체</option>{% for s in sites %}<option value="{{ s.code }}" {{ 'selected' if args.get('site')==s.code }}>{{ s.name }}</option>{% endfor %}</select>
+    <select name="status" class="sel"><option value="">상태 전체</option>{% for k,l in labels.items() %}<option value="{{ k }}" {{ 'selected' if args.get('status')==k }}>{{ l }}</option>{% endfor %}</select>
+    <select name="auto" class="sel"><option value="">자동/수동</option><option value="1" {{ 'selected' if args.get('auto')=='1' }}>자동</option><option value="0" {{ 'selected' if args.get('auto')=='0' }}>수동</option></select>
+    <button class="btn">조회</button>
+  </form>
+</header>
+<div class="content col">
+  {% with msgs = get_flashed_messages() %}{% for m in msgs %}<div class="flash">{{ m }}</div>{% endfor %}{% endwith %}
+  <section class="panel table">
+    <div class="thead cols-sms"><span>상태</span><span>일시</span><span>사이트</span><span>받는 번호</span><span>내용</span><span>구분</span><span>발송자</span><span></span></div>
+    {% for m in rows %}
+    <div class="trow cols-sms">
+      <span><span class="pill sms-{{ m.status }}">{{ labels[m.status] }}</span></span>
+      <span class="mono">{{ (m.sent_at or m.scheduled_at or m.created_at)|kdate }}</span>
+      <span class="site"><i class="dot" style="background:{{ site_map[m.site_id].color }}"></i><span class="ellipsis">{{ site_map[m.site_id].name }}</span></span>
+      <span class="mono">{{ m.to_phone|phone }}</span>
+      <span class="ellipsis" title="{{ m.body }}">{{ m.body }}{% if m.error %} <em class="warn small">— {{ m.error }}</em>{% endif %}</span>
+      <span class="mono">{{ m.msg_type }} {{ m.byte_len }}b</span>
+      <span>{{ '자동' if m.is_auto else '수동' }}</span>
+      <span class="actions">
+        {% if m.inquiry_id %}<a class="btn sm" href="{{ url_for('inquiries.list_view', id=m.inquiry_id) }}">문의</a>{% endif %}
+        {% if m.status in ('queued','scheduled') %}<form method="post" action="{{ url_for('sms.cancel', mid=m.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn sm">취소</button></form>{% endif %}
+        {% if m.status == 'failed' %}<form method="post" action="{{ url_for('sms.retry', mid=m.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn sm">재발송</button></form>{% endif %}
+      </span>
+    </div>
+    {% else %}<div class="empty">발송 내역이 없습니다.</div>{% endfor %}
+    <div class="pager"><span class="muted">총 {{ total }}건</span>
+      {% set pages = ((total - 1) // per_page) + 1 if total else 1 %}{% if pages > 1 %}{% set pq = args.to_dict() %}{% set _ = pq.pop('page', None) %}
+      <span class="pages">{% for p in range(1, pages + 1) %}<a class="{{ 'on' if p == page }}" href="{{ url_for('sms.list_view', page=p, **pq) }}">{{ p }}</a>{% endfor %}</span>{% endif %}</div>
+  </section>
+</div>
+{% endblock %}

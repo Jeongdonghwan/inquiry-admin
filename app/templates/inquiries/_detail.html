@@ -1,0 +1,85 @@
+<div class="dp" data-id="{{ inq.id }}">
+  <div class="dp-head">
+    <div class="meta"><i class="dot" style="background:{{ inq.site.color }}"></i>{{ inq.site.name }} · {{ {'legal':'법률','labor':'인사·노무'}[inq.site.category] }} · <span class="mono">No.{{ inq.id }}</span></div>
+    <div class="name-row">
+      <div><span class="name">{{ inq.customer_name }}</span><span class="type">{{ inq.inquiry_type or '' }}</span></div>
+      <div class="phone mono">{{ inq.phone|phone }}</div>
+    </div>
+    <div class="head-actions">
+      <a class="btn" href="tel:{{ inq.phone }}" data-call>전화</a>
+      <button class="btn" type="button" data-tab="sms">문자</button>
+      <button class="btn mobile-back" type="button" data-back>← 목록</button>
+    </div>
+  </div>
+
+  {% if dups %}
+  <div class="dup-band">같은 연락처로 접수된 문의가 <b>{{ dups|length }}건</b> 더 있습니다 ·
+    {% for d in dups %}<a href="{{ url_for('inquiries.list_view', id=d.id) }}" data-pick="{{ d.id }}">No.{{ d.id }} {{ d.received_at|kdate }} {{ STATUS_LABELS[d.status] }}</a>{{ ' · ' if not loop.last }}{% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="dp-sec">
+    <div class="lbl">상담 상태</div>
+    <div class="segs" data-status-group>
+      {% for s, label in STATUS_LABELS.items() %}<button type="button" class="{{ 'on' if inq.status == s }}" data-status="{{ s }}">{{ label }}</button>{% endfor %}
+    </div>
+    <div class="close-reason" hidden>
+      <select data-close-reason>{% for r in close_reasons %}<option>{{ r }}</option>{% endfor %}</select>
+      <input data-close-other placeholder="기타 사유 입력" hidden>
+      <button type="button" class="btn sm primary" data-close-confirm>종결 처리</button>
+      <button type="button" class="btn sm" data-close-cancel>취소</button>
+    </div>
+    {% if inq.status == 'closed' and inq.close_reason %}<div class="muted small">종결 사유: {{ inq.close_reason }}</div>{% endif %}
+  </div>
+
+  <div class="dp-grid">
+    <label>담당자
+      <select data-assign>
+        <option value="" {{ 'selected' if not inq.assignee_id }}>미배정</option>
+        {% for u in users %}<option value="{{ u.id }}" {{ 'selected' if inq.assignee_id == u.id }}>{{ u.display }}{% if u.id == current_user.id %} (나){% endif %}</option>{% endfor %}
+      </select>
+    </label>
+    <label>콜백 예약
+      <span class="cb-row"><input type="datetime-local" data-callback value="{{ inq.callback_at.strftime('%Y-%m-%dT%H:%M') if inq.callback_at }}"><button type="button" class="btn sm" data-callback-clear title="비우기">×</button></span>
+      {% if inq.callback_at %}<small class="{{ 'overdue' if inq.callback_at < today }}">{{ inq.callback_at|kcallback }}</small>{% endif %}
+    </label>
+    <div><span class="k">지역</span>{{ inq.region or '—' }}</div>
+    <div><span class="k">접수</span><span class="mono">{{ inq.received_at|kdate }}</span> · {{ {'mobile':'모바일','pc':'PC','tablet':'태블릿'}.get(inq.device, '—') }}</div>
+    <div><span class="k">유입 키워드</span>{{ inq.utm_term or (inq.referrer.split('/')[2] if inq.referrer and '//' in inq.referrer else '—') }}</div>
+    {% if inq.utm_source %}<div><span class="k">유입 경로</span>{{ inq.utm_source }}{% if inq.utm_medium %} / {{ inq.utm_medium }}{% endif %}</div>{% endif %}
+  </div>
+
+  <div class="dp-sec">
+    <div class="lbl">문의 내용</div>
+    <div class="msg">{{ inq.message or '(내용 없음)' }}</div>
+  </div>
+
+  <div class="dp-tabs" role="tablist">
+    <button type="button" class="on" data-tab="log">상담 기록 <span class="mono">{{ logs|length }}</span></button>
+    <button type="button" data-tab="sheet">상담지{% if sheet_required_missing %} <i class="req-dot" title="필수 항목 미완료"></i>{% endif %}</button>
+    <button type="button" data-tab="sms">문자 보내기</button>
+  </div>
+
+  <div class="tabpane" data-pane="log">
+    <textarea data-memo rows="2" placeholder="메모 또는 통화 내용"></textarea>
+    <div class="row">
+      <button type="button" class="btn sm" data-record="call">통화 완료로 기록</button>
+      <button type="button" class="btn sm" data-record="call_missed">부재중 기록</button>
+      <button type="button" class="btn sm primary" data-record="memo">메모 등록</button>
+    </div>
+    <ul class="logs">
+      {% for lg in logs %}{% include "inquiries/_log_item.html" %}{% endfor %}
+    </ul>
+  </div>
+
+  <div class="tabpane" data-pane="sheet" hidden data-src="{{ url_for('sheet.sheet_view', inquiry_id=inq.id) }}"><div class="muted small">불러오는 중…</div></div>
+
+  <div class="tabpane" data-pane="sms" hidden>
+    <div class="sms-meta"><span>받는 사람 <b>{{ inq.customer_name }}</b> · <span class="mono">{{ inq.phone|phone }}</span></span><span>발신번호 <span class="mono">{{ (inq.site.sender_number or config.SMS_DEFAULT_SENDER)|phone }}</span></span></div>
+    <div class="tpls">{% for t in templates %}<button type="button" class="btn sm" data-tpl="{{ t.body }}">{{ t.name }}</button>{% endfor %}</div>
+    <textarea data-sms rows="5" placeholder="문자 내용"></textarea>
+    <div class="sms-foot"><span class="muted small"><span data-bytes>0</span> byte · <span data-smstype>SMS 단문</span></span>
+      <span class="row"><input type="datetime-local" data-sms-at><button type="button" class="btn sm" data-sms-send="scheduled">예약 발송</button><button type="button" class="btn sm primary" data-sms-send="now">지금 보내기</button></span></div>
+    <div class="sent-note" hidden>발송 완료 · 상담 기록에 저장되었습니다.</div>
+  </div>
+</div>

@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
 <title>{% block title %}상담관리{% endblock %}</title>
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,14 +17,15 @@
     <div class="brand"><span class="brand-name">상담관리</span><span class="brand-co">{{ config.COMPANY_NAME }}</span></div>
     <div class="nav">
       {% set p = request.path %}
-      <a href="{{ url_for('inquiries.list_view') }}" class="{{ 'on' if p.startswith('/inquiries') }}"><span>통합 문의함</span><span class="badge accent" data-badge="new">0</span></a>
-      <a href="{{ url_for('inquiries.list_view') }}?cb=today"><span>오늘 콜백</span><span class="mono" data-badge="today_callback">0</span></a>
-      <a href="{{ url_for('inquiries.list_view') }}?assignee=me"><span>내 담당</span><span class="mono" data-badge="mine">0</span></a>
-      <a href="#">문자 발송내역</a>
-      <a href="#">문자 템플릿</a>
-      <a href="#">통계 · 유입분석</a>
-      <a href="{{ url_for('settings.sites') }}" class="{{ 'on' if p.startswith('/settings/sites') }}">사이트 · 폼 연동</a>
-      {% if current_user.is_admin %}<a href="#">직원 · 권한</a>{% endif %}
+      <a href="{{ url_for('inquiries.list_view') }}" class="{{ 'on' if p.startswith('/inquiries') and request.args.get('cb') != 'today' and request.args.get('assignee') != 'me' }}"><span>통합 문의함</span><span class="badge accent" data-badge="new">0</span></a>
+      <a href="{{ url_for('inquiries.list_view') }}?cb=today" class="{{ 'on' if request.args.get('cb') == 'today' }}"><span>오늘 콜백</span><span class="mono" data-badge="today_callback">0</span></a>
+      <a href="{{ url_for('inquiries.list_view') }}?assignee=me" class="{{ 'on' if request.args.get('assignee') == 'me' }}"><span>내 담당</span><span class="mono" data-badge="mine">0</span></a>
+      <a href="{{ url_for('sms.list_view') }}" class="{{ 'on' if p.startswith('/sms') }}">문자 발송내역</a>
+      {% if current_user.is_admin %}<a href="{{ url_for('settings.templates') }}" class="{{ 'on' if p.startswith('/settings/templates') }}">문자 템플릿</a>
+      <a href="{{ url_for('settings.forms') }}" class="{{ 'on' if p.startswith('/settings/forms') }}">상담지 양식</a>{% endif %}
+      {% if current_user.role != 'agent' %}<a href="{{ url_for('stats.stats_view') }}" class="{{ 'on' if p.startswith('/stats') }}">통계 · 유입분석</a>{% endif %}
+      {% if current_user.is_admin %}<a href="{{ url_for('settings.sites') }}" class="{{ 'on' if p.startswith('/settings/sites') }}">사이트 · 폼 연동</a>
+      <a href="{{ url_for('settings.users') }}" class="{{ 'on' if p.startswith('/settings/users') }}">직원 · 권한</a>{% endif %}
     </div>
     <div class="nav">
       <div class="nav-label">연결된 사이트</div>

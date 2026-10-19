@@ -1,0 +1,6 @@
+{% set K = {'received':'접수','call':'통화','call_missed':'통화','memo':'메모','sms':'문자','status':'상태','assign':'배정','callback':'콜백','sheet':'상담지','system':'시스템'} %}
+<li class="log k-{{ lg.kind }}">
+  <span class="kind">{{ K.get(lg.kind, lg.kind) }}</span>
+  <span class="body">{{ lg.body }}</span>
+  <span class="when mono">{{ lg.created_at|kdate }} · {{ lg.user.display if lg.user else ('자동발송' if lg.kind == 'sms' else '시스템') }}</span>
+</li>

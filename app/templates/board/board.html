@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}보드 · 상담관리{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div class="title"><h1>상담 보드</h1><span class="sub">상태별 진행 현황 · {{ today.strftime('%Y.%m.%d') }} 기준</span></div>
+  <div class="seg"><a href="{{ url_for('inquiries.list_view') }}">목록</a><a class="on" href="{{ url_for('board.board_view') }}">보드</a></div>
+</header>
+<div class="board-top">
+  <div class="chips">
+    {% set qs = args.to_dict() %}{% set _ = qs.pop('id', None) %}
+    {% set c = qs.pop('cat', None) %}
+    <a class="chip {{ 'on' if not c }}" href="{{ url_for('board.board_view', **qs) }}">전체</a>
+    <a class="chip {{ 'on' if c == 'legal' }}" href="{{ url_for('board.board_view', cat='legal', **qs) }}">법률</a>
+    <a class="chip {{ 'on' if c == 'labor' }}" href="{{ url_for('board.board_view', cat='labor', **qs) }}">인사·노무</a>
+    {% if c %}{% set _ = qs.update({'cat': c}) %}{% endif %}
+    <span class="sep"></span>
+    {% set sc = qs.pop('site', None) %}
+    {% for s in sites %}<a class="chip {{ 'on' if sc == s.code }}" href="{{ url_for('board.board_view', site=(None if sc == s.code else s.code), **qs) }}"><i class="dot" style="background:{{ s.color }}"></i>{{ s.name }}</a>{% endfor %}
+    {% if sc %}{% set _ = qs.update({'site': sc}) %}{% endif %}
+    <span class="sep"></span>
+    {% set me = qs.pop('assignee', None) %}
+    <a class="chip {{ 'on' if me == 'me' }}" href="{{ url_for('board.board_view', assignee=(None if me == 'me' else 'me'), **qs) }}">내 담당만</a>
+  </div>
+  <div class="kpis">
+    <div><b class="mono">{{ summary.today }}</b><span>오늘 접수</span></div>
+    <div><b class="mono">{{ summary.unassigned }}</b><span>미배정</span></div>
+    <div><b class="mono">{{ summary.cb }}</b><span>오늘 콜백</span></div>
+    <div><b class="mono">{{ summary.won }} / {{ summary.total }}</b><span>계약 전환</span></div>
+  </div>
+</div>
+<div class="board">
+  {% set COLORS = {'new':'#e8590c','contacting':'#1f4fc4','consulted':'#0b5a4c','contracted':'#1c2230','hold':'#8a93a6','closed':'#cfd4dc'} %}
+  {% for s, label in STATUS_LABELS.items() %}
+  <section class="bcol st-{{ s }}" data-status="{{ s }}" style="--c:{{ COLORS[s] }}">
+    <header><span>{{ label }}</span><span class="mono">{{ cols[s]|length }}</span></header>
+    <div class="cards" data-cards="{{ s }}">{% for it in cols[s] %}{% include "board/_card.html" %}{% endfor %}</div>
+  </section>
+  {% endfor %}
+</div>
+<aside id="drawer" class="drawer {{ 'open' if selected }}" aria-label="문의 상세">
+  <button class="drawer-close" type="button" aria-label="닫기">×</button>
+  <div class="drawer-body">{% if drawer_html %}{{ drawer_html|safe }}{% endif %}</div>
+</aside>
+<script>
+window.Board = {
+  swapCard(id, html) {
+    const old = document.querySelector(`.card[data-id="${id}"]`); if (!old) return;
+    const t = document.createElement('div'); t.innerHTML = html; const card = t.firstElementChild;
+    const col = document.querySelector(`[data-cards="${card.dataset.status}"]`);
+    old.remove(); col.prepend(card);
+    document.querySelectorAll('.bcol').forEach(c => c.querySelector('header .mono').textContent = c.querySelectorAll('.card').length);
+  }
+};
+document.querySelector('.board').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) App.openPanel(c.dataset.id); });
+const drawer = document.getElementById('drawer');
+const closeDrawer = () => { drawer.classList.remove('open'); const u = new URL(location); u.searchParams.delete('id'); history.replaceState(null, '', u); };
+drawer.querySelector('.drawer-close').onclick = closeDrawer;
+document.addEventListener('keydown', e => e.key === 'Escape' && closeDrawer());
+document.addEventListener('click', e => { if (drawer.classList.contains('open') && !drawer.contains(e.target) && !e.target.closest('.card')) closeDrawer(); });
+{% if selected %}App.bindPanel(drawer);{% endif %}
+</script>
+{% endblock %}

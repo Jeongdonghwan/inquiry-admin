@@ -27,3 +27,15 @@ def register_cli(app: Flask) -> None:
         from .seeds.seed_data import run_seed
         run_seed(reset=reset)
         click.echo("seed 완료")
+
+    @app.cli.command("sms-worker")
+    def sms_worker():
+        """crontab 1분 주기: 대기·예약 문자 발송."""
+        from .services.sms.queue import run_worker
+        click.echo(run_worker())
+
+    @app.cli.command("privacy-sweep")
+    def privacy_sweep():
+        """매일 새벽: 보관기간 지난 종결·계약 건 개인정보 마스킹."""
+        from .services.privacy import sweep
+        click.echo(f"마스킹 {sweep()}건")

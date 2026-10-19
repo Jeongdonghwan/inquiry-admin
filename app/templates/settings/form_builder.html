@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}{{ data.name or '양식 추가' }} · 상담지 양식{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div class="title"><h1>{{ data.name or '양식 추가' }}</h1><span class="sub"><a href="{{ url_for('settings.forms') }}">상담지 양식</a> › 빌더 {% if form %}· v{{ form.version }}{% endif %}</span></div>
+  <button type="button" class="btn" id="fb-json-toggle">JSON으로 편집</button>
+  <button type="button" class="btn primary" id="fb-save">저장</button>
+</header>
+<div class="content builder" id="builder" data-save="{{ url_for('settings.form_builder', fid=form.id) if form else url_for('settings.form_builder') }}" data-preview="{{ url_for('settings.form_preview') }}" data-list="{{ url_for('settings.forms') }}">
+  <section class="panel form fb-meta">
+    <div class="two">
+      <label>양식명<input id="fb-name" value="{{ data.name }}" maxlength="50"></label>
+      <label>업종<select id="fb-cat"><option value="">공통</option>{% for k, v in cats.items() %}<option value="{{ k }}" {{ 'selected' if data.category == k }}>{{ v }}</option>{% endfor %}</select></label>
+    </div>
+    <label>매칭 유형 (쉼표 구분)<input id="fb-keys" value="{{ data.inquiry_type_keys|join(', ') }}" placeholder="개인회생, 회생, 파산"><small>문의의 유형 문자열에 이 중 하나가 포함되면 자동 선택</small></label>
+    <label class="check"><input type="checkbox" id="fb-active" {{ 'checked' if data.is_active }}> 사용</label>
+    <div class="flash err" id="fb-error" hidden></div>
+  </section>
+
+  <div class="fb-grid" id="fb-visual">
+    <section class="panel fb-tree">
+      <div class="fb-head">섹션 · 필드 <button type="button" class="btn sm" data-add-section>+ 섹션</button></div>
+      <div id="fb-sections"></div>
+    </section>
+    <section class="panel fb-props" id="fb-props"><div class="empty small">왼쪽에서 필드를 선택하세요</div></section>
+  </div>
+  <section class="panel fb-json" id="fb-jsonbox" hidden>
+    <textarea id="fb-json" rows="24" spellcheck="false"></textarea>
+    <div class="row"><button type="button" class="btn sm" id="fb-json-apply">적용</button><span class="muted small">같은 검증 규칙이 적용됩니다</span></div>
+  </section>
+  <section class="panel fb-preview"><div class="fb-head">실시간 미리보기</div><div id="fb-prev" class="sheet"></div></section>
+</div>
+
+<script>
+(() => {
+  const box = document.getElementById('builder');
+  const state = { schema: {{ data.schema|tojson }}, sel: null };     // sel = [si, fi]
+  const SAVED = new Set({{ saved_keys|tojson }});                    // 저장된 key는 변경 불가
+  const TYPES = {{ types|list|tojson }};
+  const TL = { select: '드롭다운', multi: '체크박스 묶음', radio: '세그먼트 버튼', bool: '체크박스 1개', number: '숫자', text: '한 줄', textarea: '여러 줄', date: '날짜' };
+  const $ = (s, r = document) => r.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const genKey = (label, exist) => { let b = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''); if (!/^[a-z]/.test(b)) b = 'f_' + Math.random().toString(16).slice(2, 8); let k = b, i = 2; while (exist.has(k)) k = `${b}_${i++}`; return k; };
+  const allKeys = () => new Set(state.schema.sections.flatMap(s => s.fields.map(f => f.key)));
+
+  function renderTree() {
+    $('#fb-sections').innerHTML = state.schema.sections.map((s, si) => `
+      <div class="fb-sec">
+        <div class="fb-sec-head"><input value="${esc(s.title)}" data-sec-title="${si}" placeholder="섹션 제목">
+          <span class="row"><button type="button" class="btn sm" data-mv="sec:${si}:-1">▲</button><button type="button" class="btn sm" data-mv="sec:${si}:1">▼</button><button type="button" class="btn sm" data-del-sec="${si}">삭제</button></span></div>
+        ${s.fields.map((f, fi) => `<button type="button" class="fb-field ${state.sel && state.sel[0] === si && state.sel[1] === fi ? 'on' : ''}" data-pick="${si}:${fi}">
+            <span>${esc(f.label || '(라벨 없음)')} ${f.required ? '<i class="req-dot"></i>' : ''}</span><span class="muted small">${TL[f.type] || f.type} · <code>${esc(f.key)}</code></span></button>`).join('')}
+        <div class="row"><button type="button" class="btn sm" data-add-field="${si}">+ 필드</button></div>
+      </div>`).join('');
+  }
+  function renderProps() {
+    const p = $('#fb-props');
+    if (!state.sel) { p.innerHTML = '<div class="empty small">왼쪽에서 필드를 선택하세요</div>'; return; }
+    const [si, fi] = state.sel, f = state.schema.sections[si].fields[fi];
+    const others = state.schema.sections.flatMap(s => s.fields).filter(x => x.key !== f.key);
+    p.innerHTML = `
+      <div class="fb-head">필드 속성 <span class="row"><button type="button" class="btn sm" data-mv="fld:${si}:${fi}:-1">▲</button><button type="button" class="btn sm" data-mv="fld:${si}:${fi}:1">▼</button><button type="button" class="btn sm" data-del-field>삭제</button></span></div>
+      <label>라벨<input data-p="label" value="${esc(f.label)}"></label>
+      <label>key <small>${SAVED.has(f.key) ? '저장된 필드는 변경 불가 (기존 답변 보존)' : '영문 snake_case'}</small><input data-p="key" value="${esc(f.key)}" ${SAVED.has(f.key) ? 'readonly' : ''} class="mono"></label>
+      <label>타입<select data-p="type">${TYPES.map(t => `<option value="${t}" ${f.type === t ? 'selected' : ''}>${TL[t]}</option>`).join('')}</select></label>
+      <label class="check"><input type="checkbox" data-p="required" ${f.required ? 'checked' : ''}> 필수</label>
+      ${['select', 'multi', 'radio'].includes(f.type) ? `<label>선택지 (한 줄에 하나)<textarea data-p="options" rows="5">${esc((f.options || []).join('\n'))}</textarea></label>` : ''}
+      ${f.type === 'number' ? `<label>단위<input data-p="unit" value="${esc(f.unit || '')}" placeholder="만원 / 명 / 개월"></label>` : ''}
+      <label>도움말<input data-p="help" value="${esc(f.help || '')}"></label>
+      <label>표시 조건 (다른 답에 따라 표시)<select data-p="show_key"><option value="">항상 표시</option>${others.map(o => `<option value="${esc(o.key)}" ${f.show_if && f.show_if.key === o.key ? 'selected' : ''}>${esc(o.label)} (${esc(o.key)})</option>`).join('')}</select></label>
+      ${f.show_if ? `<label>이 값일 때<input data-p="show_eq" value="${esc(typeof f.show_if.eq === 'boolean' ? String(f.show_if.eq) : f.show_if.eq)}" placeholder="true / 선택지 값"></label>` : ''}`;
+    p.querySelectorAll('[data-p]').forEach(el => el.addEventListener(el.tagName === 'SELECT' || el.type === 'checkbox' ? 'change' : 'input', () => {
+      const k = el.dataset.p, v = el.type === 'checkbox' ? el.checked : el.value;
+      if (k === 'options') f.options = v.split('\n').map(x => x.trim()).filter(Boolean);
+      else if (k === 'show_key') { if (v) f.show_if = { key: v, eq: f.show_if?.eq ?? true }; else delete f.show_if; renderProps(); }
+      else if (k === 'show_eq') f.show_if.eq = v === 'true' ? true : v === 'false' ? false : v;
+      else if (k === 'label') { f.label = v; if (!SAVED.has(f.key) && !f._keyTouched) { f.key = genKey(v, new Set([...allKeys()].filter(x => x !== f.key))); p.querySelector('[data-p="key"]').value = f.key; } }
+      else if (k === 'key') { f.key = v; f._keyTouched = true; }
+      else if (k === 'type') { f.type = v; if (!['select', 'multi', 'radio'].includes(v)) delete f.options; renderProps(); }
+      else if (k === 'required') f.required = v;
+      else if (v) f[k] = v; else delete f[k];
+      renderTree(); preview();
+    }));
+    $('[data-del-field]', p).onclick = () => { state.schema.sections[si].fields.splice(fi, 1); state.sel = null; refresh(); };
+  }
+  let pt; function preview() {
+    clearTimeout(pt); pt = setTimeout(async () => {
+      const r = await fetch(box.dataset.preview, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': $('meta[name="csrf-token"]').content }, body: JSON.stringify({ schema: state.schema }) });
+      $('#fb-prev').innerHTML = await r.text();
+      $('#fb-json').value = JSON.stringify(state.schema, (k, v) => k.startsWith('_') ? undefined : v, 2);
+    }, 250);
+  }
+  function refresh() { renderTree(); renderProps(); preview(); }
+
+  box.addEventListener('click', e => {
+    const t = e.target.closest('button'); if (!t) return;
+    if (t.dataset.pick) { state.sel = t.dataset.pick.split(':').map(Number); renderTree(); renderProps(); }
+    if (t.dataset.addSection !== undefined) { state.schema.sections.push({ title: '새 섹션', fields: [] }); refresh(); }
+    if (t.dataset.addField) { const si = +t.dataset.addField, s = state.schema.sections[si]; s.fields.push({ key: genKey('field', allKeys()), label: '새 항목', type: 'text' }); state.sel = [si, s.fields.length - 1]; refresh(); }
+    if (t.dataset.delSec !== undefined) { if (!confirm('섹션과 안의 필드를 모두 삭제할까요?')) return; state.schema.sections.splice(+t.dataset.delSec, 1); state.sel = null; refresh(); }
+    if (t.dataset.mv) {
+      const [kind, a, b, c] = t.dataset.mv.split(':');
+      if (kind === 'sec') { const i = +a, j = i + +b, S = state.schema.sections; if (j >= 0 && j < S.length) { [S[i], S[j]] = [S[j], S[i]]; refresh(); } }
+      else { const F = state.schema.sections[+a].fields, i = +b, j = i + +c; if (j >= 0 && j < F.length) { [F[i], F[j]] = [F[j], F[i]]; state.sel = [+a, j]; refresh(); } }
+    }
+  });
+  box.addEventListener('input', e => { if (e.target.dataset.secTitle !== undefined) { state.schema.sections[+e.target.dataset.secTitle].title = e.target.value; preview(); } });
+
+  $('#fb-json-toggle').onclick = () => { const on = $('#fb-jsonbox').hidden; $('#fb-jsonbox').hidden = !on; $('#fb-visual').hidden = on; $('#fb-json-toggle').textContent = on ? '빌더로 편집' : 'JSON으로 편집'; };
+  $('#fb-json-apply').onclick = () => { try { state.schema = JSON.parse($('#fb-json').value); state.sel = null; refresh(); $('#fb-error').hidden = true; } catch (err) { showErr('JSON 문법 오류: ' + err.message); } };
+  const showErr = m => { const el = $('#fb-error'); el.textContent = m; el.hidden = false; el.scrollIntoView({ block: 'nearest' }); };
+
+  $('#fb-save').onclick = async () => {
+    const body = { name: $('#fb-name').value, category: $('#fb-cat').value || null, is_active: $('#fb-active').checked,
+      inquiry_type_keys: $('#fb-keys').value.split(',').map(s => s.trim()).filter(Boolean), schema: JSON.parse(JSON.stringify(state.schema, (k, v) => k.startsWith('_') ? undefined : v)) };
+    try { const j = await App.post(box.dataset.save, body); App.toast(`저장됨 · v${j.version}`); if (!{{ 'true' if form else 'false' }}) location.href = box.dataset.save.replace(/new$/, j.id); else { body.schema.sections.forEach(s => s.fields.forEach(f => SAVED.add(f.key))); renderProps(); } $('#fb-error').hidden = true; }
+    catch (err) { showErr(err.message); }
+  };
+  refresh();
+})();
+</script>
+{% endblock %}

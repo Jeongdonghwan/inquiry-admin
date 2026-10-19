@@ -1,10 +1,77 @@
 {% extends "base.html" %}
-{% block title %}통합 문의함 · 상담관리{% endblock %}
+{% block title %}{{ '오늘 콜백' if is_callback_view else '통합 문의함' }} · 상담관리{% endblock %}
 {% block content %}
 <header class="topbar">
-  <div class="title"><h1>통합 문의함</h1><span class="sub">전체 사이트 · {{ sidebar_sites|length }}개 사이트 폼 연동 · {{ today.strftime('%Y.%m.%d') }} 기준</span></div>
+  <div class="title">
+    <h1>{{ '오늘 콜백' if is_callback_view else ('내 담당' if args.get('assignee') == 'me' else '통합 문의함') }}</h1>
+    <span class="sub">{{ site_name or '전체 사이트' }} · {{ sidebar_sites|length }}개 사이트 폼 연동 · {{ today.strftime('%Y.%m.%d') }} ({{ '월화수목금토일'[today.weekday()] }}) 기준</span>
+  </div>
+  <form method="get" class="search" role="search">
+    {% for k in ('status','site','assignee','period','cat','cb','sheet') %}{% if args.get(k) %}<input type="hidden" name="{{ k }}" value="{{ args.get(k) }}">{% endif %}{% endfor %}
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5d6575" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <input name="q" value="{{ args.get('q','') }}" placeholder="이름 · 연락처 · 내용 검색" aria-label="문의 검색">
+  </form>
+  <div class="seg"><a class="on" href="{{ url_for('inquiries.list_view') }}">목록</a><a href="{{ url_for('board.board_view') }}">보드</a></div>
+  {% if current_user.is_admin %}<a class="btn" href="{{ url_for('export.export_xlsx', **args) }}">엑셀 내려받기</a>{% endif %}
+  <button class="btn primary" type="button" data-open="manual">수동 등록</button>
 </header>
-<div class="content">
-  <section class="panel empty-note">목록·상세 화면은 Phase 3에서 구현됩니다.</section>
+
+<div class="tabs" role="tablist" aria-label="상담 상태">
+  {% set cur = args.get('status','') %}
+  {% set qs = args.to_dict() %}{% set _ = qs.pop('status', None) %}{% set _ = qs.pop('page', None) %}{% set _ = qs.pop('id', None) %}
+  <a role="tab" class="{{ 'on' if not cur }}" href="{{ url_for('inquiries.list_view', **qs) }}">전체 <span class="mono">{{ counts.all }}</span></a>
+  {% for s, label in STATUS_LABELS.items() %}
+  <a role="tab" class="{{ 'on' if cur == s }}" href="{{ url_for('inquiries.list_view', status=s, **qs) }}">{{ label }} <span class="mono">{{ counts[s] }}</span></a>
+  {% endfor %}
+  <button type="button" class="filter-toggle" data-toggle="filters">필터 {{ '▴' if args.get('assignee') or args.get('period') or args.get('cat') or args.get('cb') or args.get('sheet') else '▾' }}</button>
 </div>
+
+<form method="get" class="filters {{ 'open' if args.get('assignee') or args.get('period') or args.get('cat') or args.get('cb') or args.get('sheet') }}" id="filters">
+  {% for k in ('status','site','q') %}{% if args.get(k) %}<input type="hidden" name="{{ k }}" value="{{ args.get(k) }}">{% endif %}{% endfor %}
+  <select name="assignee"><option value="">담당자 전체</option><option value="me" {{ 'selected' if args.get('assignee')=='me' }}>내 담당</option><option value="none" {{ 'selected' if args.get('assignee')=='none' }}>미배정</option>
+    {% for u in users %}<option value="{{ u.id }}" {{ 'selected' if args.get('assignee')==u.id|string }}>{{ u.display }}</option>{% endfor %}</select>
+  <select name="period"><option value="">기간 전체</option>{% for v,l in (('today','오늘'),('7','7일'),('30','30일')) %}<option value="{{ v }}" {{ 'selected' if args.get('period')==v }}>{{ l }}</option>{% endfor %}</select>
+  <select name="cat"><option value="">업종 전체</option><option value="legal" {{ 'selected' if args.get('cat')=='legal' }}>법률</option><option value="labor" {{ 'selected' if args.get('cat')=='labor' }}>인사·노무</option></select>
+  <select name="cb"><option value="">콜백 무관</option><option value="any" {{ 'selected' if args.get('cb')=='any' }}>콜백 있음</option><option value="today" {{ 'selected' if args.get('cb')=='today' }}>오늘 콜백</option></select>
+  <select name="sheet"><option value="">상담지 무관</option><option value="done" {{ 'selected' if args.get('sheet')=='done' }}>상담지 작성됨</option><option value="none" {{ 'selected' if args.get('sheet')=='none' }}>미작성</option></select>
+  <button class="btn sm">적용</button>
+  <a class="btn sm" href="{{ url_for('inquiries.list_view') }}">초기화</a>
+</form>
+
+<div class="content split {{ 'has-sel' if selected }}">
+  <section class="panel list" aria-label="문의 목록">
+    <div class="scroll">
+      <div class="thead cols-inq"><span>상태</span><span>{{ '콜백' if is_callback_view else '접수일시' }}</span><span>유입 사이트</span><span>고객 · 문의유형</span><span>연락처</span><span>담당</span></div>
+      <div id="rows">
+        {% for r in rows %}{% include "inquiries/_row.html" with context %}{% else %}
+        <div class="empty">조건에 맞는 문의가 없습니다.</div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="pager">
+      <span class="muted">총 {{ total }}건</span>
+      {% set pages = ((total - 1) // per_page) + 1 if total else 1 %}
+      {% if pages > 1 %}{% set pq = args.to_dict() %}{% set _ = pq.pop('page', None) %}
+      <span class="pages">{% for p in range(1, pages + 1) %}<a class="{{ 'on' if p == page }}" href="{{ url_for('inquiries.list_view', page=p, **pq) }}">{{ p }}</a>{% endfor %}</span>
+      {% endif %}
+    </div>
+  </section>
+  <aside class="panel detail" id="detail" aria-label="문의 상세">
+    {% if panel_html %}{{ panel_html|safe }}{% else %}<div class="empty">문의를 선택하세요.</div>{% endif %}
+  </aside>
+</div>
+
+<!-- 수동 등록 -->
+<dialog id="manual" class="modal">
+  <form method="post" action="{{ url_for('inquiries.create_manual') }}" class="form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <h3>수동 등록 <span class="muted small">전화로 들어온 문의를 직접 입력</span></h3>
+    {% if manual_error %}<div class="flash err">{{ manual_error }}</div>{% endif %}
+    <label>유입 사이트<select name="site_id" required>{% for s in sites %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}</select></label>
+    <div class="two"><label>고객명<input name="name" required maxlength="50"></label><label>연락처<input name="phone" required placeholder="010-0000-0000"></label></div>
+    <div class="two"><label>문의 유형<input name="inquiry_type" placeholder="개인회생, 부당해고 …"></label><label>지역<input name="region"></label></div>
+    <label>문의 내용<textarea name="message" rows="4"></textarea></label>
+    <div class="row"><button class="btn primary">등록</button><button class="btn" type="button" data-close>취소</button></div>
+  </form>
+</dialog>
 {% endblock %}

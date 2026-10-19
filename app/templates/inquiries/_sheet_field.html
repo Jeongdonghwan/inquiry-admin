@@ -1,0 +1,28 @@
+{% macro field(f, a) %}
+{% set v = a.get(f.key) %}
+{% set shown = (not f.show_if) or (a.get(f.show_if.key) == f.show_if.eq) %}
+<div class="sf {{ 'req' if f.required }} {{ 'missing' if f.required and shown and (v is none or v == '' or v == []) }}" data-key="{{ f.key }}" data-type="{{ f.type }}"
+     {% if f.show_if %}data-show-key="{{ f.show_if.key }}" data-show-eq='{{ f.show_if.eq|tojson }}'{% endif %} {{ '' if shown else 'hidden' }}>
+  <label class="sf-label" {% if f.type not in ('multi','radio','bool') %}for="sf-{{ f.key }}"{% endif %}>{{ f.label }}{% if f.required %}<i>*</i>{% endif %}</label>
+  <div class="sf-input">
+    {% if f.type == 'select' %}
+      <select id="sf-{{ f.key }}" name="{{ f.key }}"><option value="">선택</option>{% for o in f.options %}<option {{ 'selected' if v == o }}>{{ o }}</option>{% endfor %}</select>
+    {% elif f.type == 'multi' %}
+      <div class="multi">{% for o in f.options %}<label><input type="checkbox" name="{{ f.key }}" value="{{ o }}" {{ 'checked' if v and o in v }}><span>{{ o }}</span></label>{% endfor %}</div>
+    {% elif f.type == 'radio' %}
+      <div class="segs sm">{% for o in f.options %}<button type="button" class="{{ 'on' if v == o }}" data-radio="{{ o }}">{{ o }}</button>{% endfor %}<input type="hidden" name="{{ f.key }}" value="{{ v or '' }}"></div>
+    {% elif f.type == 'bool' %}
+      <label class="check"><input type="checkbox" name="{{ f.key }}" value="true" {{ 'checked' if v }}><span>예</span></label>
+    {% elif f.type == 'number' %}
+      <span class="num"><input id="sf-{{ f.key }}" name="{{ f.key }}" inputmode="decimal" class="mono" value="{{ '{:,}'.format(v) if v is number else (v or '') }}">{% if f.unit %}<em>{{ f.unit }}</em>{% endif %}</span>
+    {% elif f.type == 'textarea' %}
+      <textarea id="sf-{{ f.key }}" name="{{ f.key }}" rows="3">{{ v or '' }}</textarea>
+    {% elif f.type == 'date' %}
+      <input id="sf-{{ f.key }}" name="{{ f.key }}" type="date" value="{{ v or '' }}">
+    {% else %}
+      <input id="sf-{{ f.key }}" name="{{ f.key }}" value="{{ v or '' }}">
+    {% endif %}
+    {% if f.help %}<small class="help">{{ f.help }}</small>{% endif %}
+  </div>
+</div>
+{% endmacro %}
