@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}통합 문의함 · 상담관리{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div class="title"><h1>통합 문의함</h1><span class="sub">전체 사이트 · {{ sidebar_sites|length }}개 사이트 폼 연동 · {{ today.strftime('%Y.%m.%d') }} 기준</span></div>
+</header>
+<div class="content">
+  <section class="panel empty-note">목록·상세 화면은 Phase 3에서 구현됩니다.</section>
+</div>
+{% endblock %}

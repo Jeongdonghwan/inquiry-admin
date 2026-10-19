@@ -1,0 +1,26 @@
+{
+  "name": "교통사고",
+  "category": "legal",
+  "inquiry_type_keys": ["교통사고", "보험 합의", "보상"],
+  "schema": {
+    "sections": [
+      {"title": "사고 개요", "fields": [
+        {"key": "side", "label": "입장", "type": "radio", "options": ["피해자", "가해자"], "required": true},
+        {"key": "accident_date", "label": "사고 일시", "type": "date"},
+        {"key": "fault_ratio", "label": "과실 비율", "type": "number", "unit": "%"}
+      ]},
+      {"title": "부상·치료", "fields": [
+        {"key": "injury", "label": "부상", "type": "select", "options": ["경상 염좌", "골절", "수술", "장해 예상", "사망"], "required": true},
+        {"key": "diagnosis_weeks", "label": "진단 주수", "type": "number", "unit": "주"},
+        {"key": "treatment", "label": "치료", "type": "radio", "options": ["통원", "입원", "치료 중"]},
+        {"key": "hospital_days", "label": "입원 일수", "type": "number", "unit": "일", "show_if": {"key": "treatment", "eq": "입원"}}
+      ]},
+      {"title": "보험·자료", "fields": [
+        {"key": "insurer_offer", "label": "보험사 제시액", "type": "number", "unit": "만원"},
+        {"key": "insurer_contacted", "label": "보험사 측 접촉 여부", "type": "bool"},
+        {"key": "docs", "label": "자료 보유", "type": "multi", "options": ["진단서", "사고사실확인원", "블랙박스", "입퇴원확인서"]},
+        {"key": "note", "label": "특이사항", "type": "textarea"}
+      ]}
+    ]
+  }
+}

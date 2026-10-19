@@ -1,0 +1,27 @@
+{
+  "name": "가사(이혼·양육)",
+  "category": "legal",
+  "inquiry_type_keys": ["이혼", "협의이혼", "재산분할", "양육권", "양육비", "가사", "상속"],
+  "schema": {
+    "sections": [
+      {"title": "사건 개요", "fields": [
+        {"key": "kind", "label": "유형", "type": "select", "options": ["협의이혼", "재판이혼", "재산분할", "위자료", "양육권·양육비", "상속·유류분"], "required": true},
+        {"key": "marriage_years", "label": "혼인 기간", "type": "number", "unit": "년"},
+        {"key": "children", "label": "자녀", "type": "number", "unit": "명"},
+        {"key": "minor_children", "label": "미성년 자녀 있음", "type": "bool"}
+      ]},
+      {"title": "재산·사유", "fields": [
+        {"key": "assets", "label": "재산", "type": "multi", "options": ["아파트·주택", "전세보증금", "예금", "사업체", "차량", "부채"]},
+        {"key": "asset_value", "label": "추정 재산 합계", "type": "number", "unit": "만원"},
+        {"key": "fault", "label": "유책 사유", "type": "multi", "options": ["외도", "폭력", "유기", "경제 문제", "성격 차이", "기타"]},
+        {"key": "consent", "label": "상대방 합의 의사", "type": "radio", "options": ["있음", "없음", "미확인"]},
+        {"key": "separated", "label": "별거 여부", "type": "bool"},
+        {"key": "separated_months", "label": "별거 기간", "type": "number", "unit": "개월", "show_if": {"key": "separated", "eq": true}},
+        {"key": "unpaid_months", "label": "양육비 미지급 기간", "type": "number", "unit": "개월", "show_if": {"key": "kind", "eq": "양육권·양육비"}}
+      ]},
+      {"title": "판단", "fields": [
+        {"key": "note", "label": "특이사항", "type": "textarea"}
+      ]}
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>로그인 · 상담관리</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="login-body">
+<form method="post" class="login-box">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="brand"><span class="brand-name">상담관리</span><span class="brand-co">{{ config.COMPANY_NAME }}</span></div>
+  {% with msgs = get_flashed_messages() %}{% if msgs %}<p class="error">{{ msgs[0] }}</p>{% endif %}{% endwith %}
+  <label>아이디<input name="login_id" required autofocus autocomplete="username"></label>
+  <label>비밀번호<input name="password" type="password" required autocomplete="current-password"></label>
+  <button type="submit" class="btn primary">로그인</button>
+</form>
+</body>
+</html>

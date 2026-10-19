@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>통합 문의함 A안</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1f4fc4}a:hover{color:#163a91}
+.rowbtn:focus-visible,.navbtn:focus-visible,.chip:focus-visible{outline:2px solid #1f4fc4;outline-offset:-2px}
+.rowbtn:hover{background:#f6f8fb}
+input,textarea,select,button{font-family:inherit}
+</style>
+</helmet>
+<div style="min-height: 980px; display: flex; flex-wrap: wrap; background: #eef0f3; font-family: 'IBM Plex Sans KR', sans-serif; color: #1b1f27; font-size: 14px">
+
+  <!-- 사이드바 -->
+  <nav aria-label="관리 메뉴" style="flex: 1 1 212px; background: #1c2230; color: #c9cfdb; display: flex; flex-direction: column; gap: 28px; padding: 22px 14px; box-sizing: border-box">
+    <div style="display: flex; align-items: baseline; gap: 8px; padding: 0 8px">
+      <span style="font-size: 17px; font-weight: 700; color: #ffffff; letter-spacing: -0.2px">상담관리</span>
+      <span style="font-size: 11px; color: #8a93a6">[회사명]</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <a href="#" style="display: flex; justify-content: space-between; padding: 10px 10px; background: #2c3445; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: 600"><span>통합 문의함</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: #e8590c; color: #ffffff; padding: 1px 7px; border-radius: 10px">{{ newCount }}</span></a>
+      <a href="#" style="display: flex; justify-content: space-between; padding: 10px; color: #c9cfdb; text-decoration: none"><span>오늘 콜백</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px">{{ cbCount }}</span></a>
+      <a href="#" style="display: flex; justify-content: space-between; padding: 10px; color: #c9cfdb; text-decoration: none"><span>내 담당</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px">{{ mineCount }}</span></a>
+      <a href="#" style="padding: 10px; color: #c9cfdb; text-decoration: none">문자 발송내역</a>
+      <a href="#" style="padding: 10px; color: #c9cfdb; text-decoration: none">문자 템플릿</a>
+      <a href="#" style="padding: 10px; color: #c9cfdb; text-decoration: none">통계 · 유입분석</a>
+      <a href="#" style="padding: 10px; color: #c9cfdb; text-decoration: none">사이트 · 폼 연동</a>
+      <a href="#" style="padding: 10px; color: #c9cfdb; text-decoration: none">직원 · 권한</a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="font-size: 11px; color: #8a93a6; padding: 0 10px 6px; letter-spacing: 0.4px">연결된 사이트</div>
+      <sc-for list="{{ siteList }}" as="st" hint-placeholder-count="7">
+        <button class="navbtn" onClick="{{ st.pick }}" style="{{ st.btnStyle }}">
+          <span style="display: flex; align-items: center; gap: 8px; min-width: 0"><span style="{{ st.dot }}"></span><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ st.name }}</span></span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #8a93a6">{{ st.count }}</span>
+        </button>
+      </sc-for>
+    </div>
+    <div style="margin-top: auto; padding: 12px 10px 0; border-top: 1px solid #2f3747; font-size: 12px; color: #8a93a6">윤서영 팀장 · 관리자</div>
+  </nav>
+
+  <!-- 본문 -->
+  <main style="flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column">
+    <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding: 18px 24px; background: #ffffff; border-bottom: 1px solid #dde0e6">
+      <div style="display: flex; flex-direction: column; gap: 2px; margin-right: auto">
+        <h1 style="margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.3px">통합 문의함</h1>
+        <span style="font-size: 12px; color: #5d6575">{{ siteTitle }} · 6개 사이트 폼 연동 · 2026.10.13 (화) 기준</span>
+      </div>
+      <label style="display: flex; align-items: center; gap: 8px; border: 1px solid #cfd4dc; border-radius: 4px; padding: 0 12px; height: 40px; background: #ffffff; min-width: 240px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5d6575" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <span style="position: absolute; left: -9999px">문의 검색</span>
+        <input value="{{ q }}" onChange="{{ onQ }}" placeholder="이름 · 연락처 · 내용 검색" style="border: 0; outline: none; font-size: 14px; flex: 1; min-width: 0; background: transparent">
+      </label>
+      <button style="height: 40px; padding: 0 14px; border: 1px solid #cfd4dc; background: #ffffff; border-radius: 4px; font-size: 13px; cursor: pointer">엑셀 내려받기</button>
+      <button style="height: 40px; padding: 0 14px; border: 0; background: #1f4fc4; color: #ffffff; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer">수동 등록</button>
+    </header>
+
+    <div role="tablist" aria-label="상담 상태" style="display: flex; flex-wrap: wrap; gap: 0; padding: 0 24px; background: #ffffff; border-bottom: 1px solid #dde0e6">
+      <sc-for list="{{ statusTabs }}" as="tb" hint-placeholder-count="7">
+        <button role="tab" class="chip" onClick="{{ tb.pick }}" style="{{ tb.style }}">{{ tb.label }} <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; margin-left: 4px">{{ tb.count }}</span></button>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; padding: 16px 24px 24px; align-items: flex-start">
+
+      <!-- 목록 -->
+      <section aria-label="문의 목록" style="flex: 999 1 560px; min-width: 0; background: #ffffff; border: 1px solid #dde0e6; border-radius: 4px">
+        <div style="overflow-x: auto">
+          <div style="min-width: 720px">
+            <div style="display: grid; grid-template-columns: 84px 92px 150px minmax(0, 1fr) 124px 96px; gap: 12px; padding: 10px 16px; font-size: 12px; color: #5d6575; border-bottom: 1px solid #dde0e6; background: #f7f8fa">
+              <span>상태</span><span>접수일시</span><span>유입 사이트</span><span>고객 · 문의유형</span><span>연락처</span><span>담당</span>
+            </div>
+            <sc-for list="{{ rows }}" as="r" hint-placeholder-count="10">
+              <button class="rowbtn" onClick="{{ r.pick }}" style="{{ r.rowStyle }}">
+                <span><span style="{{ r.pill }}">{{ r.status }}</span></span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #3d4452">{{ r.at }}</span>
+                <span style="display: flex; align-items: center; gap: 7px; min-width: 0"><span style="{{ r.dot }}"></span><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px">{{ r.siteName }}</span></span>
+                <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+                  <span style="display: flex; align-items: center; gap: 6px"><strong style="font-weight: 600">{{ r.name }}</strong><span style="font-size: 12px; color: #5d6575">{{ r.type }}</span>
+                    <sc-if value="{{ r.dup }}" hint-placeholder-val="{{ false }}"><span style="font-size: 11px; color: #a33a00; border: 1px solid #f0b48f; padding: 0 5px; border-radius: 3px">중복</span></sc-if>
+                  </span>
+                  <span style="font-size: 12px; color: #5d6575; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ r.msg }}</span>
+                </span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px">{{ r.phone }}</span>
+                <span style="{{ r.ownerStyle }}">{{ r.ownerShort }}</span>
+              </button>
+            </sc-for>
+            <sc-if value="{{ empty }}" hint-placeholder-val="{{ false }}">
+              <div style="padding: 48px 16px; text-align: center; color: #5d6575">조건에 맞는 문의가 없습니다.</div>
+            </sc-if>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 10px 16px; font-size: 12px; color: #5d6575; border-top: 1px solid #e6e8ec">
+          <span>총 {{ rowCount }}건</span><span>미배정 문의는 접수 후 30분 안에 담당자를 지정해 주세요</span>
+        </div>
+      </section>
+
+      <!-- 상세 -->
+      <section aria-label="문의 상세" style="flex: 1 1 400px; min-width: 0; background: #ffffff; border: 1px solid #dde0e6; border-radius: 4px; display: flex; flex-direction: column">
+        <div style="padding: 18px 20px 16px; border-bottom: 1px solid #e6e8ec; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #5d6575">
+            <span style="{{ sel.dot }}"></span><span>{{ sel.siteName }}</span><span>·</span><span>{{ sel.cat }}</span><span>·</span><span style="font-family: 'IBM Plex Mono', monospace">No.{{ sel.no }}</span>
+          </div>
+          <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap">
+            <div style="display: flex; flex-direction: column; gap: 4px">
+              <h2 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px">{{ sel.name }} <span style="font-size: 14px; font-weight: 500; color: #3d4452">{{ sel.type }}</span></h2>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px">{{ sel.phone }}</span>
+            </div>
+            <div style="display: flex; gap: 6px">
+              <a href="tel:{{ sel.phone }}" style="display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border: 1px solid #cfd4dc; border-radius: 4px; text-decoration: none; color: #1b1f27; font-size: 13px">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg>전화</a>
+              <button onClick="{{ goSms }}" style="display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border: 1px solid #cfd4dc; border-radius: 4px; background: #ffffff; font-size: 13px; cursor: pointer">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path></svg>문자</button>
+            </div>
+          </div>
+          <sc-if value="{{ sel.dup }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 12px; background: #fdf1e8; border: 1px solid #f0c9ad; border-radius: 4px; font-size: 13px; color: #7a2c00">
+              <span>같은 연락처로 접수된 문의가 1건 더 있습니다.</span>
+              <button onClick="{{ dupPick }}" style="border: 0; background: transparent; color: #7a2c00; text-decoration: underline; cursor: pointer; font-size: 13px">이전 문의 보기</button>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="padding: 16px 20px; border-bottom: 1px solid #e6e8ec; display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <span style="font-size: 12px; color: #5d6575">상담 상태</span>
+            <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border: 1px solid #cfd4dc; border-radius: 4px; overflow: hidden">
+              <sc-for list="{{ statusOpts }}" as="so" hint-placeholder-count="6">
+                <button onClick="{{ so.set }}" style="{{ so.style }}">{{ so.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; font-size: 13px">
+            <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 12px; color: #5d6575">담당자</span>
+              <select value="{{ sel.owner }}" onChange="{{ onOwner }}" style="height: 36px; border: 1px solid #cfd4dc; border-radius: 4px; padding: 0 8px; font-size: 13px; background: #ffffff">
+                <option value="미배정">미배정</option><option value="강민석 실장">강민석 실장</option><option value="윤서영 팀장">윤서영 팀장</option><option value="오세진 (가맹팀)">오세진 (가맹팀)</option>
+              </select>
+            </label>
+            <div style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 12px; color: #5d6575">콜백 예약</span>
+              <span style="height: 36px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #cfd4dc; border-radius: 4px; padding: 0 10px"><span>{{ sel.cbLabel }}</span><span style="font-size: 12px; color: #1f4fc4">변경</span></span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #5d6575">지역</span><span>{{ sel.region }}</span></div>
+            <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #5d6575">접수</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">{{ sel.at }} · {{ sel.device }}</span></div>
+            <div style="display: flex; flex-direction: column; gap: 2px; grid-column: 1 / -1"><span style="font-size: 12px; color: #5d6575">유입 키워드</span><span>{{ sel.kw }}</span></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <span style="font-size: 12px; color: #5d6575">문의 내용</span>
+            <p style="margin: 0; padding: 12px 14px; background: #f5f6f8; border-radius: 4px; line-height: 1.65; font-size: 14px">{{ sel.msg }}</p>
+          </div>
+        </div>
+
+        <div role="tablist" style="display: flex; border-bottom: 1px solid #e6e8ec; padding: 0 20px">
+          <button role="tab" onClick="{{ tabLog }}" style="{{ tabLogStyle }}">상담 기록 {{ sel.logCount }}</button>
+          <button role="tab" onClick="{{ tabSms }}" style="{{ tabSmsStyle }}">문자 보내기</button>
+        </div>
+
+        <sc-if value="{{ isLog }}" hint-placeholder-val="{{ true }}">
+          <div style="padding: 16px 20px; display: flex; flex-direction: column; gap: 14px">
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <label style="font-size: 12px; color: #5d6575" for="memo">상담 메모 남기기</label>
+              <textarea id="memo" value="{{ memo }}" onChange="{{ onMemo }}" rows="3" placeholder="통화 내용, 고객 상황, 다음 액션을 적어주세요" style="border: 1px solid #cfd4dc; border-radius: 4px; padding: 10px 12px; font-size: 14px; resize: vertical; line-height: 1.5"></textarea>
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap">
+                <div style="display: flex; gap: 6px">
+                  <button onClick="{{ addCall }}" style="height: 32px; padding: 0 10px; border: 1px solid #cfd4dc; background: #ffffff; border-radius: 4px; font-size: 12px; cursor: pointer">통화 완료로 기록</button>
+                  <button onClick="{{ addMiss }}" style="height: 32px; padding: 0 10px; border: 1px solid #cfd4dc; background: #ffffff; border-radius: 4px; font-size: 12px; cursor: pointer">부재중 기록</button>
+                </div>
+                <button onClick="{{ addMemo }}" style="height: 36px; padding: 0 16px; border: 0; background: #1c2230; color: #ffffff; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer">메모 등록</button>
+              </div>
+            </div>
+            <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column">
+              <sc-for list="{{ sel.logs }}" as="lg" hint-placeholder-count="4">
+                <li style="display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 12px; padding: 12px 0; border-top: 1px solid #eef0f3">
+                  <span><span style="{{ lg.kindStyle }}">{{ lg.k }}</span></span>
+                  <span style="display: flex; flex-direction: column; gap: 3px">
+                    <span style="line-height: 1.55; white-space: pre-line">{{ lg.x }}</span>
+                    <span style="font-size: 12px; color: #5d6575"><span style="font-family: 'IBM Plex Mono', monospace">{{ lg.t }}</span> · {{ lg.by }}</span>
+                  </span>
+                </li>
+              </sc-for>
+            </ol>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isSms }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 16px 20px; display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; justify-content: space-between; font-size: 13px">
+              <span><span style="color: #5d6575">받는 사람</span> {{ sel.name }} · <span style="font-family: 'IBM Plex Mono', monospace">{{ sel.phone }}</span></span>
+              <span><span style="color: #5d6575">발신번호</span> [대표번호]</span>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px">
+              <span style="font-size: 12px; color: #5d6575; align-self: center; margin-right: 4px">템플릿</span>
+              <sc-for list="{{ tpls }}" as="tp" hint-placeholder-count="3">
+                <button onClick="{{ tp.apply }}" style="height: 30px; padding: 0 10px; border: 1px solid #cfd4dc; background: #ffffff; border-radius: 15px; font-size: 12px; cursor: pointer">{{ tp.label }}</button>
+              </sc-for>
+            </div>
+            <label for="sms" style="position: absolute; left: -9999px">문자 내용</label>
+            <textarea id="sms" value="{{ sms }}" onChange="{{ onSms }}" rows="6" placeholder="보낼 내용을 입력하거나 템플릿을 고르세요" style="border: 1px solid #cfd4dc; border-radius: 4px; padding: 10px 12px; font-size: 14px; resize: vertical; line-height: 1.55"></textarea>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap">
+              <span style="font-size: 12px; color: #5d6575"><span style="font-family: 'IBM Plex Mono', monospace">{{ bytes }}</span> byte · <strong style="color: #1b1f27">{{ smsType }}</strong> · 90byte 넘으면 장문(LMS)으로 발송</span>
+              <div style="display: flex; gap: 6px">
+                <button style="height: 36px; padding: 0 12px; border: 1px solid #cfd4dc; background: #ffffff; border-radius: 4px; font-size: 13px; cursor: pointer">예약 발송</button>
+                <button onClick="{{ sendSms }}" style="height: 36px; padding: 0 16px; border: 0; background: #1f4fc4; color: #ffffff; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer">지금 보내기</button>
+              </div>
+            </div>
+            <sc-if value="{{ sentNote }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size: 13px; color: #0c5f51; background: #e3f4ef; padding: 8px 12px; border-radius: 4px">발송 완료 · 상담 기록에 저장되었습니다.</div>
+            </sc-if>
+          </div>
+        </sc-if>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":980}}'>
+class Component extends DCLogic {
+  seed() {
+    var sites = [
+      { id: 'hs', name: '회생파산 상담센터', cat: '법률', color: '#c2410c' },
+      { id: 'ih', name: '이혼·가사 상담', cat: '법률', color: '#7c3aed' },
+      { id: 'ta', name: '교통사고 보상센터', cat: '법률', color: '#0369a1' },
+      { id: 'hj', name: '형사 변호 상담', cat: '법률', color: '#475569' },
+      { id: 'cb', name: '바삭한형제 가맹', cat: '프랜차이즈', color: '#b45309' },
+      { id: 'mc', name: '모퉁이커피 창업', cat: '프랜차이즈', color: '#15803d' }
+    ];
+    var A = function (t, n) { return { t: t, k: '접수', by: '시스템', x: n + ' 상담폼으로 접수' }; };
+    var S = function (t) { return { t: t, k: '문자', by: '자동발송', x: '[접수확인] 문의가 정상 접수되었습니다. 영업시간 내 순서대로 연락드리겠습니다.' }; };
+    var data = [
+      { id: 1, site: 'hs', type: '개인회생', name: '박정훈', phone: '010-4821-3307', region: '경기 수원시 영통구', at: '10.13 19:42', status: '신규', owner: '미배정', kw: '수원 개인회생 비용', device: '모바일', cb: '', dup: 11,
+        msg: '카드론 포함 채무가 7,800만원 정도이고 월 실수령 280만원입니다. 개인회생 가능한지, 수임료가 어느 정도인지 궁금합니다.',
+        logs: [A('10.13 19:42', '회생파산 상담센터'), S('10.13 19:42')] },
+      { id: 2, site: 'hj', type: '형사 · 경찰 출석', name: '조민재', phone: '010-6612-0954', region: '서울 강서구', at: '10.13 20:03', status: '신규', owner: '미배정', kw: '경찰조사 변호사 동행', device: '모바일', cb: '',
+        msg: '다음 주 화요일 경찰서 출석 요구를 받았습니다. 변호사 동행이 가능한지, 비용은 어떻게 되는지 문의드립니다.',
+        logs: [A('10.13 20:03', '형사 변호 상담'), S('10.13 20:03')] },
+      { id: 3, site: 'ih', type: '협의이혼 · 재산분할', name: '정다은', phone: '010-2294-5518', region: '서울 송파구', at: '10.13 16:20', status: '연락중', owner: '윤서영 팀장', kw: '재산분할 비율 상담', device: 'PC', cb: '10.14 (수) 19:00',
+        msg: '남편과 협의이혼을 진행 중인데 공동명의 아파트 재산분할 비율 상담을 받고 싶습니다. 퇴근 후 저녁 7시 이후 통화 가능합니다.',
+        logs: [A('10.13 16:20', '이혼·가사 상담'), S('10.13 16:20'),
+          { t: '10.13 16:41', k: '통화', by: '윤서영 팀장', x: '부재중 — 1차 연락 안 됨' },
+          { t: '10.13 16:42', k: '문자', by: '윤서영 팀장', x: '[이혼·가사 상담] 정다은님, 문의 주신 건으로 연락드렸으나 통화가 어려워 문자 남깁니다. 편하신 시간을 회신 주시면 맞춰 연락드리겠습니다.' },
+          { t: '10.13 17:05', k: '메모', by: '윤서영 팀장', x: '고객 회신: 내일 저녁 7시 통화 희망 → 콜백 10.14 19:00 지정' }] },
+      { id: 4, site: 'cb', type: '가맹 창업', name: '이수진', phone: '010-7730-1942', region: '경기 화성시 동탄', at: '10.13 18:55', status: '신규', owner: '미배정', kw: '치킨 창업 비용', device: 'PC', cb: '',
+        msg: '동탄2 신도시 상가 15평 정도를 보고 있습니다. 총 창업비용과 로열티 구조, 배달 위주 운영 가능한지 알고 싶어요.',
+        logs: [A('10.13 18:55', '바삭한형제 가맹'), S('10.13 18:55')] },
+      { id: 5, site: 'ta', type: '보험 합의', name: '한재욱', phone: '010-5163-8820', region: '인천 부평구', at: '10.13 11:08', status: '상담완료', owner: '강민석 실장', kw: '교통사고 합의금 적정', device: '모바일', cb: '',
+        msg: '신호대기 중 후방추돌로 2주 입원했습니다. 보험사 합의금 제시액이 적정한지 봐주실 수 있나요?',
+        logs: [A('10.13 11:08', '교통사고 보상센터'), S('10.13 11:08'),
+          { t: '10.13 11:30', k: '통화', by: '강민석 실장', x: '통화 22분 · 사고 경위 및 치료 경과 확인' },
+          { t: '10.13 11:36', k: '메모', by: '강민석 실장', x: '진단 4주, 보험사 제시액 확인 필요. 진단서·입퇴원확인서 받기로 함' },
+          { t: '10.13 11:38', k: '상태', by: '강민석 실장', x: '연락중 → 상담완료' }] },
+      { id: 6, site: 'mc', type: '가맹 창업 · 업종전환', name: '서동현', phone: '010-9015-4432', region: '대전 유성구', at: '10.12 15:47', status: '연락중', owner: '오세진 (가맹팀)', kw: '개인카페 브랜드 전환', device: 'PC', cb: '10.13 (화) 21:00',
+        msg: '개인카페를 3년째 운영 중입니다. 기존 매장을 브랜드로 전환하는 것도 가능한지, 인테리어 비용은 얼마나 드는지 궁금합니다.',
+        logs: [A('10.12 15:47', '모퉁이커피 창업'), S('10.12 15:47'),
+          { t: '10.12 16:10', k: '통화', by: '오세진 (가맹팀)', x: '통화 15분 · 현재 매장 18평, 상권 대학가' },
+          { t: '10.12 16:14', k: '문자', by: '오세진 (가맹팀)', x: '[모퉁이커피 창업] 서동현님, 요청하신 창업 안내서를 보내드립니다: [안내서 링크]' }] },
+      { id: 7, site: 'hj', type: '형사 · 고소 대응', name: '문상현', phone: '010-3047-6621', region: '경기 성남시 분당구', at: '10.12 10:12', status: '보류', owner: '강민석 실장', kw: '고소당했을때 대응', device: '모바일', cb: '10.16 (금) 14:00',
+        msg: '지인과의 금전 문제로 고소장이 접수됐다는 연락을 받았습니다. 대응 방법 상담 원합니다.',
+        logs: [A('10.12 10:12', '형사 변호 상담'),
+          { t: '10.12 11:00', k: '통화', by: '강민석 실장', x: '통화 18분 · 사건 개요 청취' },
+          { t: '10.12 11:05', k: '상태', by: '강민석 실장', x: '연락중 → 보류' },
+          { t: '10.12 11:06', k: '메모', by: '강민석 실장', x: '본인이 자료 정리 후 다시 연락 주기로 함. 10.16 재연락' }] },
+      { id: 8, site: 'hs', type: '개인파산', name: '김영자', phone: '010-3380-2716', region: '경기 수원시 권선구', at: '10.12 21:30', status: '계약', owner: '강민석 실장', kw: '개인파산 신청 자격', device: '모바일', cb: '',
+        msg: '나이가 많아 일을 할 수 없는 상황입니다. 파산 신청이 가능한지 알고 싶습니다.',
+        logs: [A('10.12 21:30', '회생파산 상담센터'),
+          { t: '10.13 09:40', k: '통화', by: '강민석 실장', x: '방문 상담 일정 확정 (10.13 14:00)' },
+          { t: '10.13 15:10', k: '메모', by: '강민석 실장', x: '방문 상담 완료 · 수임 계약서 작성' },
+          { t: '10.13 15:12', k: '상태', by: '강민석 실장', x: '상담완료 → 계약' }] },
+      { id: 9, site: 'cb', type: '가맹 창업', name: '유지호', phone: '010-8872-1406', region: '충남 천안시', at: '10.11 13:30', status: '종결', owner: '오세진 (가맹팀)', kw: '소자본 치킨집 창업', device: '모바일', cb: '',
+        msg: '소자본으로 창업 가능한 모델이 있는지 궁금합니다.',
+        logs: [A('10.11 13:30', '바삭한형제 가맹'),
+          { t: '10.11 15:00', k: '통화', by: '오세진 (가맹팀)', x: '통화 10분 · 가용 예산 3천만원' },
+          { t: '10.11 15:03', k: '상태', by: '오세진 (가맹팀)', x: '연락중 → 종결 (사유: 예산 불일치)' }] },
+      { id: 10, site: 'ih', type: '양육권 · 양육비', name: '임가영', phone: '010-4419-2083', region: '경기 고양시 일산동구', at: '10.11 09:50', status: '상담완료', owner: '윤서영 팀장', kw: '양육비 이행 청구', device: 'PC', cb: '',
+        msg: '이혼 후 양육비를 1년째 받지 못하고 있습니다. 이행 청구 절차가 궁금합니다.',
+        logs: [A('10.11 09:50', '이혼·가사 상담'),
+          { t: '10.11 10:30', k: '통화', by: '윤서영 팀장', x: '통화 30분 · 이행명령 절차 안내' },
+          { t: '10.11 10:35', k: '상태', by: '윤서영 팀장', x: '연락중 → 상담완료' }] },
+      { id: 11, site: 'hs', type: '개인회생', name: '박정훈', phone: '010-4821-3307', region: '경기 수원시 영통구', at: '10.12 19:05', status: '연락중', owner: '강민석 실장', kw: '개인회생 조건', device: '모바일', cb: '10.13 (화) 20:30', dup: 1,
+        msg: '개인회생 상담 받고 싶습니다. 저녁에 통화 가능합니다.',
+        logs: [A('10.12 19:05', '회생파산 상담센터'), S('10.12 19:05'),
+          { t: '10.13 10:20', k: '통화', by: '강민석 실장', x: '부재중 — 1차 연락 안 됨' },
+          { t: '10.13 10:21', k: '문자', by: '강민석 실장', x: '[회생파산 상담센터] 박정훈님, 문의 주신 건으로 연락드렸으나 통화가 어려워 문자 남깁니다.' }] },
+      { id: 12, site: 'mc', type: '가맹 계약', name: '황보름', phone: '010-2508-7731', region: '부산 해운대구', at: '10.09 14:22', status: '계약', owner: '오세진 (가맹팀)', kw: '모퉁이커피 가맹비', device: 'PC', cb: '',
+        msg: '해운대 역세권 1층 20평 확보했습니다. 가맹 절차 진행하고 싶습니다.',
+        logs: [A('10.09 14:22', '모퉁이커피 창업'),
+          { t: '10.10 11:00', k: '메모', by: '오세진 (가맹팀)', x: '본사 미팅 완료 · 상권 분석 통과' },
+          { t: '10.12 16:00', k: '상태', by: '오세진 (가맹팀)', x: '상담완료 → 계약 (가맹계약 체결)' }] }
+    ];
+    return { sites: sites, data: data };
+  }
+  base() { if (!this._b) this._b = this.seed(); return this._b; }
+  now() { var d = new Date(); var p = function (n) { return (n < 10 ? '0' : '') + n; }; return p(d.getMonth() + 1) + '.' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
+  items() { return (this.state && this.state.items) || this.base().data; }
+  patch(id, fn) { this.setState({ items: this.items().map(function (it) { return it.id === id ? fn(it) : it; }) }); }
+  log(id, k, x) { var me = '윤서영 팀장', t = this.now(); this.patch(id, function (it) { return Object.assign({}, it, { logs: it.logs.concat([{ t: t, k: k, by: me, x: x }]) }); }); }
+  pill(s) {
+    var m = { '신규': 'background:#fde6d6;color:#9a3400', '연락중': 'background:#e1e9fc;color:#1a43ad', '상담완료': 'background:#d9efe8;color:#0b5a4c', '계약': 'background:#1c2230;color:#ffffff', '보류': 'background:#e9eaed;color:#40454f', '종결': 'background:#f1f1f1;color:#666a72;text-decoration:line-through' };
+    return 'display:inline-block;font-size:12px;font-weight:600;padding:3px 8px;border-radius:3px;white-space:nowrap;' + (m[s] || '');
+  }
+  kind(k) {
+    var m = { '접수': 'color:#40454f;border-color:#cfd4dc', '통화': 'color:#1a43ad;border-color:#a9bdf0', '문자': 'color:#9a3400;border-color:#f0b48f', '메모': 'color:#1b1f27;border-color:#1b1f27', '상태': 'color:#0b5a4c;border-color:#94cdbd' };
+    return 'display:inline-block;font-size:11px;font-weight:600;padding:1px 6px;border:1px solid;border-radius:3px;' + (m[k] || '');
+  }
+  bytes(str) { var n = 0; for (var i = 0; i < str.length; i++) n += str.charCodeAt(i) > 127 ? 2 : 1; return n; }
+  renderVals() {
+    var self = this, s = this.state || {}, B = this.base(), items = this.items();
+    var STAT = ['신규', '연락중', '상담완료', '계약', '보류', '종결'];
+    var siteMap = {}; B.sites.forEach(function (x) { siteMap[x.id] = x; });
+    var fs = s.fs || '전체', fsite = s.fsite || 'all', q = (s.q || '').trim();
+    var sorted = items.slice().sort(function (a, b) { return a.at < b.at ? 1 : -1; });
+    var bySite = sorted.filter(function (it) { return fsite === 'all' || it.site === fsite; });
+    var filtered = bySite.filter(function (it) { return (fs === '전체' || it.status === fs) && (!q || (it.name + it.phone + it.type + it.msg).indexOf(q) >= 0); });
+    var selId = s.selId != null ? s.selId : 3;
+    var sel0 = items.filter(function (i) { return i.id === selId; })[0] || items[0];
+    var dot = function (c) { return 'display:inline-block;width:8px;height:8px;border-radius:50%;flex:none;background:' + c; };
+    var rowBase = 'all:unset;box-sizing:border-box;width:100%;display:grid;grid-template-columns:84px 92px 150px minmax(0,1fr) 124px 96px;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid #eceef1;cursor:pointer;';
+    var rows = filtered.map(function (it) {
+      var on = it.id === sel0.id;
+      return { status: it.status, at: it.at, siteName: siteMap[it.site].name, name: it.name, type: it.type, msg: it.msg, phone: it.phone, dup: !!it.dup,
+        ownerShort: it.owner === '미배정' ? '미배정' : it.owner.split(' ')[0],
+        ownerStyle: it.owner === '미배정' ? 'font-size:12px;font-weight:600;color:#9a3400' : 'font-size:13px',
+        pill: self.pill(it.status), dot: dot(siteMap[it.site].color),
+        rowStyle: rowBase + (on ? 'background:#e7eefc;' : ''),
+        pick: function () { self.setState({ selId: it.id, sentNote: false }); } };
+    });
+    var tabBase = 'height:46px;padding:0 14px;border:0;background:transparent;cursor:pointer;font-size:14px;';
+    var statusTabs = ['전체'].concat(STAT).map(function (k) {
+      var n = k === '전체' ? bySite.length : bySite.filter(function (i) { return i.status === k; }).length;
+      return { label: k, count: n, style: tabBase + (fs === k ? 'color:#1b1f27;font-weight:700;box-shadow:inset 0 -2px 0 #1f4fc4' : 'color:#5d6575'),
+        pick: function () { self.setState({ fs: k }); } };
+    });
+    var navBase = 'all:unset;box-sizing:border-box;display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;padding:8px 10px;cursor:pointer;border-radius:4px;font-size:13px;';
+    var siteList = [{ id: 'all', name: '전체 사이트', color: '#8a93a6' }].concat(B.sites).map(function (x) {
+      return { name: x.name, dot: dot(x.color), count: x.id === 'all' ? items.length : items.filter(function (i) { return i.site === x.id; }).length,
+        btnStyle: navBase + (fsite === x.id ? 'background:#2c3445;color:#ffffff' : 'color:#c9cfdb'),
+        pick: function () { self.setState({ fsite: x.id }); } };
+    });
+    var segBase = 'border:0;border-right:1px solid #cfd4dc;height:36px;font-size:12px;cursor:pointer;padding:0 2px;';
+    var statusOpts = STAT.map(function (k, i) {
+      var on = sel0.status === k;
+      return { label: k, style: segBase + (i === 5 ? 'border-right:0;' : '') + (on ? 'background:#1c2230;color:#ffffff;font-weight:700' : 'background:#ffffff;color:#40454f'),
+        set: function () { if (sel0.status === k) return; var prev = sel0.status; self.setState({ items: self.items().map(function (it) { return it.id === sel0.id ? Object.assign({}, it, { status: k, logs: it.logs.concat([{ t: self.now(), k: '상태', by: '윤서영 팀장', x: prev + ' → ' + k }]) }) : it; }) }); } };
+    });
+    var site = siteMap[sel0.site];
+    var fill = function (b) { return b.split('{이름}').join(sel0.name).split('{사이트}').join(site.name); };
+    var T = [
+      { label: '부재 안내', body: '[{사이트}] {이름}님, 문의 주신 건으로 연락드렸으나 통화가 어려워 문자 남깁니다. 편하신 시간을 회신 주시면 맞춰 연락드리겠습니다.' },
+      { label: '상담 일정 확정', body: '[{사이트}] {이름}님, 요청하신 상담이 [일시]로 예약되었습니다. 변경이 필요하시면 이 번호로 회신 부탁드립니다.' }
+    ].concat(site.cat === '법률'
+      ? [{ label: '준비서류 안내', body: '[{사이트}] {이름}님, 상담 시 지참하실 서류 안내드립니다.\n- 신분증\n- 소득 증빙\n- 관련 자료(계약서·진단서 등)\n문의: [대표번호]' }]
+      : [{ label: '창업 안내서', body: '[{사이트}] {이름}님, 요청하신 창업 안내서를 보내드립니다: [안내서 링크]\n검토 후 궁금한 점 편하게 문의 주세요.' }]);
+    var tpls = T.map(function (t) { return { label: t.label, apply: function () { self.setState({ sms: fill(t.body), sentNote: false }); } }; });
+    var sms = s.sms || '', b = this.bytes(sms);
+    var tab = s.tab || 'log';
+    var tBase = 'height:44px;padding:0 4px;margin-right:20px;border:0;background:transparent;cursor:pointer;font-size:14px;';
+    var logs = sel0.logs.slice().reverse().map(function (l) { return Object.assign({}, l, { kindStyle: self.kind(l.k) }); });
+    var dupTarget = sel0.dup;
+    return {
+      newCount: items.filter(function (i) { return i.status === '신규'; }).length,
+      cbCount: items.filter(function (i) { return i.cb && i.cb.indexOf('10.13') === 0; }).length,
+      mineCount: items.filter(function (i) { return i.owner === '윤서영 팀장'; }).length,
+      siteTitle: fsite === 'all' ? '전체 사이트' : siteMap[fsite].name,
+      siteList: siteList, statusTabs: statusTabs, rows: rows, rowCount: rows.length, empty: rows.length === 0,
+      q: s.q || '', onQ: function (e) { self.setState({ q: e.target.value }); },
+      sel: Object.assign({}, sel0, { siteName: site.name, cat: site.cat, dot: dot(site.color), no: String(2026101300 + sel0.id), cbLabel: sel0.cb || '미지정', logs: logs, logCount: sel0.logs.length, dup: !!sel0.dup }),
+      dupPick: function () { if (dupTarget) self.setState({ selId: dupTarget, fs: '전체' }); },
+      statusOpts: statusOpts,
+      onOwner: function (e) { var v = e.target.value, prev = sel0.owner; self.setState({ items: self.items().map(function (it) { return it.id === sel0.id ? Object.assign({}, it, { owner: v, logs: it.logs.concat([{ t: self.now(), k: '상태', by: '윤서영 팀장', x: '담당자 ' + prev + ' → ' + v }]) }) : it; }) }); },
+      isLog: tab === 'log', isSms: tab === 'sms',
+      tabLogStyle: tBase + (tab === 'log' ? 'font-weight:700;color:#1b1f27;box-shadow:inset 0 -2px 0 #1c2230' : 'color:#5d6575'),
+      tabSmsStyle: tBase + (tab === 'sms' ? 'font-weight:700;color:#1b1f27;box-shadow:inset 0 -2px 0 #1c2230' : 'color:#5d6575'),
+      tabLog: function () { self.setState({ tab: 'log' }); }, tabSms: function () { self.setState({ tab: 'sms' }); },
+      goSms: function () { self.setState({ tab: 'sms', sentNote: false }); },
+      memo: s.memo || '', onMemo: function (e) { self.setState({ memo: e.target.value }); },
+      addMemo: function () { var m = (self.state && self.state.memo || '').trim(); if (!m) return; self.log(sel0.id, '메모', m); self.setState({ memo: '' }); },
+      addCall: function () { var m = (self.state && self.state.memo || '').trim(); self.log(sel0.id, '통화', m ? '통화 완료 · ' + m : '통화 완료'); self.setState({ memo: '' }); },
+      addMiss: function () { self.log(sel0.id, '통화', '부재중 — 연결 안 됨'); },
+      tpls: tpls, sms: sms, onSms: function (e) { self.setState({ sms: e.target.value, sentNote: false }); },
+      bytes: b, smsType: b > 90 ? 'LMS 장문' : 'SMS 단문',
+      sendSms: function () { var m = (self.state && self.state.sms || '').trim(); if (!m) return; self.log(sel0.id, '문자', m); self.setState({ sms: '', sentNote: true }); },
+      sentNote: !!s.sentNote
+    };
+  }
+}
+</script>
+</body>
+</html>

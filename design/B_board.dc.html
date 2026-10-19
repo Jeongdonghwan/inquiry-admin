@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>상담 파이프라인 B안</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#c2410c}a:hover{color:#9a3412}
+.card:hover{border-color:#8d93a0}
+.card:focus-visible,.fbtn:focus-visible{outline:2px solid #c2410c;outline-offset:1px}
+input,textarea,button{font-family:inherit}
+</style>
+</helmet>
+<div style="position: relative; min-height: 980px; background: #e8eaed; font-family: 'Gothic A1', sans-serif; color: #15171c; font-size: 14px; display: flex; flex-direction: column">
+
+  <!-- 상단 바 -->
+  <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; padding: 0 28px; min-height: 60px; background: #15171c; color: #e6e8ec">
+    <span style="font-size: 18px; font-weight: 800; color: #ffffff; letter-spacing: -0.4px">상담함<span style="color: #f08a4b">.</span></span>
+    <nav aria-label="주 메뉴" style="display: flex; flex-wrap: wrap; gap: 4px; font-size: 14px">
+      <a href="#" style="padding: 8px 12px; color: #ffffff; text-decoration: none; font-weight: 700; background: #2a2d35; border-radius: 4px">파이프라인</a>
+      <a href="#" style="padding: 8px 12px; color: #b9bec9; text-decoration: none">목록</a>
+      <a href="#" style="padding: 8px 12px; color: #b9bec9; text-decoration: none">콜백 일정</a>
+      <a href="#" style="padding: 8px 12px; color: #b9bec9; text-decoration: none">문자 내역</a>
+      <a href="#" style="padding: 8px 12px; color: #b9bec9; text-decoration: none">유입 통계</a>
+      <a href="#" style="padding: 8px 12px; color: #b9bec9; text-decoration: none">설정</a>
+    </nav>
+    <label style="margin-left: auto; display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; background: #2a2d35; border-radius: 4px; min-width: 220px">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b9bec9" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <span style="position: absolute; left: -9999px">검색</span>
+      <input value="{{ q }}" onChange="{{ onQ }}" placeholder="이름 · 번호 · 내용" style="border: 0; outline: none; background: transparent; color: #ffffff; font-size: 13px; flex: 1; min-width: 0">
+    </label>
+    <span style="font-size: 13px; color: #b9bec9">윤서영 팀장</span>
+  </header>
+
+  <!-- 요약 + 필터 -->
+  <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px; padding: 24px 28px 16px">
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <h1 style="margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.6px">상담 파이프라인</h1>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px">
+        <sc-for list="{{ cats }}" as="c" hint-placeholder-count="3">
+          <button class="fbtn" onClick="{{ c.pick }}" style="{{ c.style }}">{{ c.label }}</button>
+        </sc-for>
+        <span style="width: 1px; background: #c5c9d1; margin: 0 6px"></span>
+        <sc-for list="{{ siteChips }}" as="sc" hint-placeholder-count="6">
+          <button class="fbtn" onClick="{{ sc.pick }}" style="{{ sc.style }}"><span style="{{ sc.dot }}"></span>{{ sc.name }}</button>
+        </sc-for>
+        <span style="width: 1px; background: #c5c9d1; margin: 0 6px"></span>
+        <button class="fbtn" onClick="{{ toggleMine }}" style="{{ mineStyle }}">내 담당만</button>
+      </div>
+    </div>
+    <dl style="display: flex; gap: 0; margin: 0; background: #ffffff; border: 1px solid #d3d6dc; border-radius: 6px">
+      <div style="padding: 10px 18px; border-right: 1px solid #e3e5e9"><dt style="font-size: 12px; color: #555b67">오늘 접수</dt><dd style="margin: 2px 0 0; font-size: 22px; font-weight: 800; font-family: 'JetBrains Mono', monospace">{{ kToday }}</dd></div>
+      <div style="padding: 10px 18px; border-right: 1px solid #e3e5e9"><dt style="font-size: 12px; color: #555b67">미배정</dt><dd style="margin: 2px 0 0; font-size: 22px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: #b83a06">{{ kUnassigned }}</dd></div>
+      <div style="padding: 10px 18px; border-right: 1px solid #e3e5e9"><dt style="font-size: 12px; color: #555b67">오늘 콜백</dt><dd style="margin: 2px 0 0; font-size: 22px; font-weight: 800; font-family: 'JetBrains Mono', monospace">{{ kCb }}</dd></div>
+      <div style="padding: 10px 18px"><dt style="font-size: 12px; color: #555b67">계약 전환</dt><dd style="margin: 2px 0 0; font-size: 22px; font-weight: 800; font-family: 'JetBrains Mono', monospace">{{ kWon }}</dd></div>
+    </dl>
+  </div>
+
+  <!-- 보드 -->
+  <div style="overflow-x: auto; padding: 0 28px 28px; flex: 1">
+    <div style="display: grid; grid-template-columns: repeat(6, minmax(232px, 1fr)); gap: 12px; min-width: 1440px; align-items: start">
+      <sc-for list="{{ cols }}" as="col" hint-placeholder-count="6">
+        <section style="background: #f4f5f7; border: 1px solid #d3d6dc; border-radius: 6px; display: flex; flex-direction: column; min-height: 640px">
+          <div style="{{ col.headStyle }}">
+            <h2 style="margin: 0; font-size: 14px; font-weight: 800">{{ col.label }}</h2>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #555b67">{{ col.count }}</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px">
+            <sc-for list="{{ col.items }}" as="it" hint-placeholder-count="2">
+              <button class="card" onClick="{{ it.open }}" style="{{ it.cardStyle }}">
+                <span style="display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 12px; color: #555b67">
+                  <span style="display: flex; align-items: center; gap: 6px; min-width: 0"><span style="{{ it.dot }}"></span><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ it.siteName }}</span></span>
+                  <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; flex: none">{{ it.at }}</span>
+                </span>
+                <span style="display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap"><strong style="font-size: 16px; font-weight: 800">{{ it.name }}</strong><span style="font-size: 12px; color: #3a3f4a">{{ it.type }}</span></span>
+                <span style="font-size: 12px; color: #555b67; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden">{{ it.last }}</span>
+                <span style="display: flex; flex-wrap: wrap; gap: 4px">
+                  <span style="{{ it.ownerStyle }}">{{ it.ownerShort }}</span>
+                  <sc-if value="{{ it.hasCb }}" hint-placeholder-val="{{ false }}"><span style="font-size: 11px; padding: 2px 6px; border-radius: 3px; background: #e1e9fc; color: #1a43ad; font-weight: 600">콜백 {{ it.cb }}</span></sc-if>
+                  <sc-if value="{{ it.dup }}" hint-placeholder-val="{{ false }}"><span style="font-size: 11px; padding: 2px 6px; border-radius: 3px; border: 1px solid #e9a77f; color: #9a3400; font-weight: 600">중복</span></sc-if>
+                </span>
+              </button>
+            </sc-for>
+            <sc-if value="{{ col.empty }}" hint-placeholder-val="{{ false }}">
+              <span style="font-size: 12px; color: #6b707b; text-align: center; padding: 24px 0">비어 있음</span>
+            </sc-if>
+          </div>
+        </section>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- 상세 서랍 -->
+  <sc-if value="{{ open }}" hint-placeholder-val="{{ true }}">
+    <button aria-label="상세 닫기" onClick="{{ close }}" style="position: absolute; inset: 0; border: 0; background: rgba(21, 23, 28, 0.38); cursor: pointer"></button>
+    <aside aria-label="문의 상세" style="position: absolute; top: 0; right: 0; bottom: 0; width: 100%; max-width: 560px; background: #ffffff; display: flex; flex-direction: column; overflow-y: auto">
+      <div style="padding: 22px 26px 18px; background: #15171c; color: #ffffff; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #b9bec9">
+          <span style="display: flex; align-items: center; gap: 7px"><span style="{{ sel.dot }}"></span>{{ sel.siteName }} · {{ sel.cat }}</span>
+          <button onClick="{{ close }}" aria-label="닫기" style="width: 36px; height: 36px; border: 0; background: #2a2d35; color: #ffffff; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+          </button>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 26px; font-weight: 800; letter-spacing: -0.5px">{{ sel.name }}</span>
+            <span style="font-size: 14px; color: #d7dae0">{{ sel.type }} · <span style="font-family: 'JetBrains Mono', monospace">{{ sel.phone }}</span></span>
+          </div>
+          <a href="tel:{{ sel.phone }}" style="display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 16px; background: #f08a4b; color: #15171c; font-weight: 800; border-radius: 4px; text-decoration: none; font-size: 14px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg>전화 걸기</a>
+        </div>
+      </div>
+
+      <div style="padding: 18px 26px; border-bottom: 1px solid #e3e5e9; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px">
+          <sc-for list="{{ steps }}" as="sp" hint-placeholder-count="4">
+            <button onClick="{{ sp.set }}" style="{{ sp.style }}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px">{{ sp.n }}</span>{{ sp.label }}</button>
+          </sc-for>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap">
+          <span style="font-size: 12px; color: #555b67">현재 상태 <strong style="color: #15171c">{{ sel.status }}</strong></span>
+          <div style="display: flex; gap: 6px">
+            <button onClick="{{ setHold }}" style="{{ holdStyle }}">보류</button>
+            <button onClick="{{ setEnd }}" style="{{ endStyle }}">종결 처리</button>
+          </div>
+        </div>
+      </div>
+
+      <dl style="margin: 0; padding: 16px 26px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 16px; border-bottom: 1px solid #e3e5e9; font-size: 13px">
+        <div><dt style="font-size: 11px; color: #555b67">담당</dt><dd style="margin: 3px 0 0; font-weight: 700">{{ sel.owner }}</dd></div>
+        <div><dt style="font-size: 11px; color: #555b67">콜백</dt><dd style="margin: 3px 0 0; font-weight: 700">{{ sel.cbLabel }}</dd></div>
+        <div><dt style="font-size: 11px; color: #555b67">지역</dt><dd style="margin: 3px 0 0">{{ sel.region }}</dd></div>
+        <div><dt style="font-size: 11px; color: #555b67">접수</dt><dd style="margin: 3px 0 0; font-family: 'JetBrains Mono', monospace; font-size: 12px">{{ sel.at }}</dd></div>
+        <div><dt style="font-size: 11px; color: #555b67">기기</dt><dd style="margin: 3px 0 0">{{ sel.device }}</dd></div>
+        <div><dt style="font-size: 11px; color: #555b67">유입 키워드</dt><dd style="margin: 3px 0 0">{{ sel.kw }}</dd></div>
+      </dl>
+
+      <div style="padding: 16px 26px; border-bottom: 1px solid #e3e5e9">
+        <p style="margin: 0; font-size: 15px; line-height: 1.7; color: #15171c">“{{ sel.msg }}”</p>
+      </div>
+
+      <div style="padding: 18px 26px; display: flex; flex-direction: column; gap: 12px; flex: 1; background: #f4f5f7">
+        <span style="font-size: 12px; font-weight: 700; color: #555b67">상담 타임라인</span>
+        <sc-for list="{{ sel.logs }}" as="lg" hint-placeholder-count="4">
+          <sc-if value="{{ lg.isSys }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align: center; font-size: 12px; color: #555b67"><span style="font-family: 'JetBrains Mono', monospace">{{ lg.t }}</span> · {{ lg.x }}</div>
+          </sc-if>
+          <sc-if value="{{ lg.isCall }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; align-items: center; gap: 10px; font-size: 13px">
+              <span style="width: 28px; height: 28px; border-radius: 50%; background: #e1e9fc; color: #1a43ad; display: flex; align-items: center; justify-content: center; flex: none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg></span>
+              <span style="flex: 1">{{ lg.x }}</span>
+              <span style="font-size: 11px; color: #555b67; flex: none">{{ lg.by }} · <span style="font-family: 'JetBrains Mono', monospace">{{ lg.t }}</span></span>
+            </div>
+          </sc-if>
+          <sc-if value="{{ lg.isMemo }}" hint-placeholder-val="{{ false }}">
+            <div style="background: #ffffff; border: 1px solid #d3d6dc; border-radius: 6px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px">
+              <span style="font-size: 11px; color: #555b67"><strong style="color: #15171c">메모</strong> · {{ lg.by }} · <span style="font-family: 'JetBrains Mono', monospace">{{ lg.t }}</span></span>
+              <span style="font-size: 14px; line-height: 1.55; white-space: pre-line">{{ lg.x }}</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{ lg.isSms }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px">
+              <div style="{{ lg.bubble }}">{{ lg.x }}</div>
+              <span style="font-size: 11px; color: #555b67">문자 · {{ lg.by }} · <span style="font-family: 'JetBrains Mono', monospace">{{ lg.t }}</span></span>
+            </div>
+          </sc-if>
+        </sc-for>
+      </div>
+
+      <div style="padding: 14px 26px 20px; border-top: 1px solid #d3d6dc; background: #ffffff; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap">
+          <div role="tablist" style="display: inline-flex; border: 1px solid #c5c9d1; border-radius: 4px; overflow: hidden">
+            <button role="tab" onClick="{{ modeMemo }}" style="{{ memoTabStyle }}">메모</button>
+            <button role="tab" onClick="{{ modeSms }}" style="{{ smsTabStyle }}">문자</button>
+          </div>
+          <sc-if value="{{ isSms }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-wrap: wrap; gap: 4px">
+              <sc-for list="{{ tpls }}" as="tp" hint-placeholder-count="3">
+                <button onClick="{{ tp.apply }}" style="height: 28px; padding: 0 9px; border: 1px solid #c5c9d1; background: #ffffff; border-radius: 3px; font-size: 12px; cursor: pointer">{{ tp.label }}</button>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+        <label for="compose" style="position: absolute; left: -9999px">내용 입력</label>
+        <textarea id="compose" value="{{ draft }}" onChange="{{ onDraft }}" rows="3" placeholder="{{ placeholder }}" style="border: 1px solid #c5c9d1; border-radius: 4px; padding: 10px 12px; font-size: 14px; line-height: 1.55; resize: vertical"></textarea>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+          <span style="font-size: 12px; color: #555b67">{{ hint }}</span>
+          <button onClick="{{ submit }}" style="height: 40px; padding: 0 18px; border: 0; background: #15171c; color: #ffffff; border-radius: 4px; font-size: 14px; font-weight: 700; cursor: pointer">{{ submitLabel }}</button>
+        </div>
+      </div>
+    </aside>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":980}}'>
+class Component extends DCLogic {
+  seed() {
+    var sites = [
+      { id: 'hs', name: '회생파산 상담센터', cat: '법률', color: '#c2410c' },
+      { id: 'ih', name: '이혼·가사 상담', cat: '법률', color: '#7c3aed' },
+      { id: 'ta', name: '교통사고 보상센터', cat: '법률', color: '#0369a1' },
+      { id: 'hj', name: '형사 변호 상담', cat: '법률', color: '#475569' },
+      { id: 'cb', name: '바삭한형제 가맹', cat: '프랜차이즈', color: '#b45309' },
+      { id: 'mc', name: '모퉁이커피 창업', cat: '프랜차이즈', color: '#15803d' }
+    ];
+    var A = function (t, n) { return { t: t, k: '접수', by: '시스템', x: n + ' 상담폼으로 접수' }; };
+    var S = function (t) { return { t: t, k: '문자', by: '자동발송', x: '[접수확인] 문의가 정상 접수되었습니다. 영업시간 내 순서대로 연락드리겠습니다.' }; };
+    var data = [
+      { id: 1, site: 'hs', type: '개인회생', name: '박정훈', phone: '010-4821-3307', region: '경기 수원시 영통구', at: '10.13 19:42', status: '신규', owner: '미배정', kw: '수원 개인회생 비용', device: '모바일', cb: '', dup: 11,
+        msg: '카드론 포함 채무가 7,800만원 정도이고 월 실수령 280만원입니다. 개인회생 가능한지, 수임료가 어느 정도인지 궁금합니다.',
+        logs: [A('10.13 19:42', '회생파산 상담센터'), S('10.13 19:42')] },
+      { id: 2, site: 'hj', type: '형사 · 경찰 출석', name: '조민재', phone: '010-6612-0954', region: '서울 강서구', at: '10.13 20:03', status: '신규', owner: '미배정', kw: '경찰조사 변호사 동행', device: '모바일', cb: '',
+        msg: '다음 주 화요일 경찰서 출석 요구를 받았습니다. 변호사 동행이 가능한지, 비용은 어떻게 되는지 문의드립니다.',
+        logs: [A('10.13 20:03', '형사 변호 상담'), S('10.13 20:03')] },
+      { id: 3, site: 'ih', type: '협의이혼 · 재산분할', name: '정다은', phone: '010-2294-5518', region: '서울 송파구', at: '10.13 16:20', status: '연락중', owner: '윤서영 팀장', kw: '재산분할 비율 상담', device: 'PC', cb: '10.14 19:00',
+        msg: '남편과 협의이혼을 진행 중인데 공동명의 아파트 재산분할 비율 상담을 받고 싶습니다. 퇴근 후 저녁 7시 이후 통화 가능합니다.',
+        logs: [A('10.13 16:20', '이혼·가사 상담'), S('10.13 16:20'),
+          { t: '10.13 16:41', k: '통화', by: '윤서영 팀장', x: '부재중 — 1차 연락 안 됨' },
+          { t: '10.13 16:42', k: '문자', by: '윤서영 팀장', x: '[이혼·가사 상담] 정다은님, 문의 주신 건으로 연락드렸으나 통화가 어려워 문자 남깁니다. 편하신 시간을 회신 주시면 맞춰 연락드리겠습니다.' },
+          { t: '10.13 17:05', k: '메모', by: '윤서영 팀장', x: '고객 회신: 내일 저녁 7시 통화 희망 → 콜백 10.14 19:00 지정' }] },
+      { id: 4, site: 'cb', type: '가맹 창업', name: '이수진', phone: '010-7730-1942', region: '경기 화성시 동탄', at: '10.13 18:55', status: '신규', owner: '미배정', kw: '치킨 창업 비용', device: 'PC', cb: '',
+        msg: '동탄2 신도시 상가 15평 정도를 보고 있습니다. 총 창업비용과 로열티 구조, 배달 위주 운영 가능한지 알고 싶어요.',
+        logs: [A('10.13 18:55', '바삭한형제 가맹'), S('10.13 18:55')] },
+      { id: 5, site: 'ta', type: '보험 합의', name: '한재욱', phone: '010-5163-8820', region: '인천 부평구', at: '10.13 11:08', status: '상담완료', owner: '강민석 실장', kw: '교통사고 합의금 적정', device: '모바일', cb: '',
+        msg: '신호대기 중 후방추돌로 2주 입원했습니다. 보험사 합의금 제시액이 적정한지 봐주실 수 있나요?',
+        logs: [A('10.13 11:08', '교통사고 보상센터'), S('10.13 11:08'),
+          { t: '10.13 11:30', k: '통화', by: '강민석 실장', x: '통화 22분 · 사고 경위 및 치료 경과 확인' },
+          { t: '10.13 11:36', k: '메모', by: '강민석 실장', x: '진단 4주, 보험사 제시액 확인 필요. 진단서·입퇴원확인서 받기로 함' },
+          { t: '10.13 11:38', k: '상태', by: '강민석 실장', x: '연락중 → 상담완료' }] },
+      { id: 6, site: 'mc', type: '가맹 · 업종전환', name: '서동현', phone: '010-9015-4432', region: '대전 유성구', at: '10.12 15:47', status: '연락중', owner: '오세진 (가맹팀)', kw: '개인카페 브랜드 전환', device: 'PC', cb: '10.13 21:00',
+        msg: '개인카페를 3년째 운영 중입니다. 기존 매장을 브랜드로 전환하는 것도 가능한지, 인테리어 비용은 얼마나 드는지 궁금합니다.',
+        logs: [A('10.12 15:47', '모퉁이커피 창업'), S('10.12 15:47'),
+          { t: '10.12 16:10', k: '통화', by: '오세진 (가맹팀)', x: '통화 15분 · 현재 매장 18평, 상권 대학가' },
+          { t: '10.12 16:14', k: '문자', by: '오세진 (가맹팀)', x: '[모퉁이커피 창업] 서동현님, 요청하신 창업 안내서를 보내드립니다: [안내서 링크]' }] },
+      { id: 7, site: 'hj', type: '형사 · 고소 대응', name: '문상현', phone: '010-3047-6621', region: '경기 성남시 분당구', at: '10.12 10:12', status: '보류', owner: '강민석 실장', kw: '고소당했을때 대응', device: '모바일', cb: '10.16 14:00',
+        msg: '지인과의 금전 문제로 고소장이 접수됐다는 연락을 받았습니다. 대응 방법 상담 원합니다.',
+        logs: [A('10.12 10:12', '형사 변호 상담'),
+          { t: '10.12 11:00', k: '통화', by: '강민석 실장', x: '통화 18분 · 사건 개요 청취' },
+          { t: '10.12 11:05', k: '상태', by: '강민석 실장', x: '연락중 → 보류' },
+          { t: '10.12 11:06', k: '메모', by: '강민석 실장', x: '본인이 자료 정리 후 다시 연락 주기로 함. 10.16 재연락' }] },
+      { id: 8, site: 'hs', type: '개인파산', name: '김영자', phone: '010-3380-2716', region: '경기 수원시 권선구', at: '10.12 21:30', status: '계약', owner: '강민석 실장', kw: '개인파산 신청 자격', device: '모바일', cb: '',
+        msg: '나이가 많아 일을 할 수 없는 상황입니다. 파산 신청이 가능한지 알고 싶습니다.',
+        logs: [A('10.12 21:30', '회생파산 상담센터'),
+          { t: '10.13 09:40', k: '통화', by: '강민석 실장', x: '방문 상담 일정 확정 (10.13 14:00)' },
+          { t: '10.13 15:10', k: '메모', by: '강민석 실장', x: '방문 상담 완료 · 수임 계약서 작성' },
+          { t: '10.13 15:12', k: '상태', by: '강민석 실장', x: '상담완료 → 계약' }] },
+      { id: 9, site: 'cb', type: '가맹 창업', name: '유지호', phone: '010-8872-1406', region: '충남 천안시', at: '10.11 13:30', status: '종결', owner: '오세진 (가맹팀)', kw: '소자본 치킨집 창업', device: '모바일', cb: '',
+        msg: '소자본으로 창업 가능한 모델이 있는지 궁금합니다.',
+        logs: [A('10.11 13:30', '바삭한형제 가맹'),
+          { t: '10.11 15:00', k: '통화', by: '오세진 (가맹팀)', x: '통화 10분 · 가용 예산 3천만원' },
+          { t: '10.11 15:03', k: '상태', by: '오세진 (가맹팀)', x: '연락중 → 종결 (사유: 예산 불일치)' }] },
+      { id: 10, site: 'ih', type: '양육권 · 양육비', name: '임가영', phone: '010-4419-2083', region: '경기 고양시 일산동구', at: '10.11 09:50', status: '상담완료', owner: '윤서영 팀장', kw: '양육비 이행 청구', device: 'PC', cb: '',
+        msg: '이혼 후 양육비를 1년째 받지 못하고 있습니다. 이행 청구 절차가 궁금합니다.',
+        logs: [A('10.11 09:50', '이혼·가사 상담'),
+          { t: '10.11 10:30', k: '통화', by: '윤서영 팀장', x: '통화 30분 · 이행명령 절차 안내' },
+          { t: '10.11 10:35', k: '상태', by: '윤서영 팀장', x: '연락중 → 상담완료' }] },
+      { id: 11, site: 'hs', type: '개인회생', name: '박정훈', phone: '010-4821-3307', region: '경기 수원시 영통구', at: '10.12 19:05', status: '연락중', owner: '강민석 실장', kw: '개인회생 조건', device: '모바일', cb: '10.13 20:30', dup: 1,
+        msg: '개인회생 상담 받고 싶습니다. 저녁에 통화 가능합니다.',
+        logs: [A('10.12 19:05', '회생파산 상담센터'), S('10.12 19:05'),
+          { t: '10.13 10:20', k: '통화', by: '강민석 실장', x: '부재중 — 1차 연락 안 됨' },
+          { t: '10.13 10:21', k: '문자', by: '강민석 실장', x: '[회생파산 상담센터] 박정훈님, 문의 주신 건으로 연락드렸으나 통화가 어려워 문자 남깁니다.' }] },
+      { id: 12, site: 'mc', type: '가맹 계약', name: '황보름', phone: '010-2508-7731', region: '부산 해운대구', at: '10.09 14:22', status: '계약', owner: '오세진 (가맹팀)', kw: '모퉁이커피 가맹비', device: 'PC', cb: '',
+        msg: '해운대 역세권 1층 20평 확보했습니다. 가맹 절차 진행하고 싶습니다.',
+        logs: [A('10.09 14:22', '모퉁이커피 창업'),
+          { t: '10.10 11:00', k: '메모', by: '오세진 (가맹팀)', x: '본사 미팅 완료 · 상권 분석 통과' },
+          { t: '10.12 16:00', k: '상태', by: '오세진 (가맹팀)', x: '상담완료 → 계약 (가맹계약 체결)' }] }
+    ];
+    return { sites: sites, data: data };
+  }
+  base() { if (!this._b) this._b = this.seed(); return this._b; }
+  now() { var d = new Date(); var p = function (n) { return (n < 10 ? '0' : '') + n; }; return p(d.getMonth() + 1) + '.' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
+  items() { return (this.state && this.state.items) || this.base().data; }
+  addLog(id, k, x, extra) { var t = this.now(); this.setState({ items: this.items().map(function (it) { return it.id === id ? Object.assign({}, it, extra || {}, { logs: it.logs.concat([{ t: t, k: k, by: '윤서영 팀장', x: x }]) }) : it; }) }); }
+  bytes(str) { var n = 0; for (var i = 0; i < str.length; i++) n += str.charCodeAt(i) > 127 ? 2 : 1; return n; }
+  renderVals() {
+    var self = this, s = this.state || {}, B = this.base(), items = this.items();
+    var siteMap = {}; B.sites.forEach(function (x) { siteMap[x.id] = x; });
+    var cat = s.cat || '전체', fsite = s.fsite || 'all', mine = !!s.mine, q = (s.q || '').trim();
+    var dot = function (c) { return 'display:inline-block;width:8px;height:8px;border-radius:50%;flex:none;background:' + c; };
+    var chip = function (on) { return 'display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:17px;font-size:13px;cursor:pointer;' + (on ? 'background:#15171c;color:#ffffff;border:1px solid #15171c;font-weight:700' : 'background:#ffffff;color:#2a2d35;border:1px solid #c5c9d1'); };
+    var cats = ['전체', '법률', '프랜차이즈'].map(function (c) { return { label: c, style: chip(cat === c), pick: function () { self.setState({ cat: c, fsite: 'all' }); } }; });
+    var siteChips = B.sites.filter(function (x) { return cat === '전체' || x.cat === cat; }).map(function (x) {
+      return { name: x.name, dot: dot(x.color), style: chip(fsite === x.id), pick: function () { self.setState({ fsite: fsite === x.id ? 'all' : x.id }); } };
+    });
+    var vis = items.filter(function (it) {
+      var st = siteMap[it.site];
+      return (cat === '전체' || st.cat === cat) && (fsite === 'all' || it.site === fsite) && (!mine || it.owner === '윤서영 팀장') && (!q || (it.name + it.phone + it.type + it.msg).indexOf(q) >= 0);
+    }).sort(function (a, b) { return a.at < b.at ? 1 : -1; });
+    var STAT = [['신규', '#d9480f'], ['연락중', '#2856c9'], ['상담완료', '#0f7a66'], ['계약', '#15171c'], ['보류', '#8d93a0'], ['종결', '#c5c9d1']];
+    var selId = s.selId != null ? s.selId : 3;
+    var open = s.open == null ? true : s.open;
+    var cardBase = 'all:unset;box-sizing:border-box;width:100%;display:flex;flex-direction:column;gap:7px;padding:12px;background:#ffffff;border:1px solid #d3d6dc;border-radius:6px;cursor:pointer;';
+    var cols = STAT.map(function (p) {
+      var list = vis.filter(function (i) { return i.status === p[0]; }).map(function (it) {
+        var lastLog = it.logs[it.logs.length - 1];
+        var unassigned = it.owner === '미배정';
+        return { name: it.name, type: it.type, at: it.at, siteName: siteMap[it.site].name, dot: dot(siteMap[it.site].color),
+          last: lastLog.k === '접수' || lastLog.by === '자동발송' ? it.msg : lastLog.x,
+          ownerShort: unassigned ? '미배정' : it.owner.split(' ')[0],
+          ownerStyle: 'font-size:11px;padding:2px 6px;border-radius:3px;font-weight:700;' + (unassigned ? 'background:#fde6d6;color:#9a3400' : 'background:#eceef1;color:#3a3f4a'),
+          hasCb: !!it.cb, cb: it.cb, dup: !!it.dup,
+          cardStyle: cardBase + (open && it.id === selId ? 'border-color:#15171c;box-shadow:0 0 0 1px #15171c;' : '') + (p[0] === '종결' ? 'opacity:0.75;' : ''),
+          open: function () { self.setState({ selId: it.id, open: true }); } };
+      });
+      return { label: p[0], count: list.length, items: list, empty: list.length === 0,
+        headStyle: 'display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid #d3d6dc;box-shadow:inset 0 3px 0 ' + p[1] + ';border-radius:6px 6px 0 0' };
+    });
+    var sel0 = items.filter(function (i) { return i.id === selId; })[0] || items[0];
+    var site = siteMap[sel0.site];
+    var order = ['신규', '연락중', '상담완료', '계약'];
+    var idx = order.indexOf(sel0.status);
+    var setStatus = function (k) { if (sel0.status === k) return; self.addLog(sel0.id, '상태', sel0.status + ' → ' + k, { status: k }); };
+    var steps = order.map(function (k, i) {
+      var done = idx >= 0 && i < idx, cur = i === idx;
+      return { n: '0' + (i + 1), label: k, set: function () { setStatus(k); },
+        style: 'display:flex;flex-direction:column;align-items:flex-start;gap:2px;height:54px;padding:8px 10px;border-radius:4px;cursor:pointer;font-size:13px;font-weight:700;text-align:left;' +
+          (cur ? 'background:#15171c;color:#ffffff;border:1px solid #15171c' : done ? 'background:#dfe2e7;color:#2a2d35;border:1px solid #dfe2e7' : 'background:#ffffff;color:#555b67;border:1px dashed #b3b8c2') };
+    });
+    var small = function (on) { return 'height:32px;padding:0 12px;border-radius:4px;font-size:12px;cursor:pointer;' + (on ? 'background:#3a3f4a;color:#ffffff;border:1px solid #3a3f4a;font-weight:700' : 'background:#ffffff;color:#2a2d35;border:1px solid #c5c9d1'); };
+    var logs = sel0.logs.map(function (l) {
+      var auto = l.by === '자동발송';
+      return Object.assign({}, l, { isSys: l.k === '접수' || l.k === '상태', isCall: l.k === '통화', isMemo: l.k === '메모', isSms: l.k === '문자',
+        x: l.k === '상태' ? '상태 ' + l.x + ' (' + l.by + ')' : l.x,
+        bubble: 'max-width:82%;padding:10px 12px;border-radius:10px 10px 2px 10px;font-size:13px;line-height:1.55;white-space:pre-line;' + (auto ? 'background:#ffffff;border:1px solid #d3d6dc;color:#3a3f4a' : 'background:#15171c;color:#ffffff') });
+    });
+    var mode = s.mode || 'memo';
+    var tab = function (on) { return 'height:32px;padding:0 16px;border:0;font-size:13px;cursor:pointer;' + (on ? 'background:#15171c;color:#ffffff;font-weight:700' : 'background:#ffffff;color:#2a2d35'); };
+    var fill = function (b) { return b.split('{이름}').join(sel0.name).split('{사이트}').join(site.name); };
+    var T = [
+      { label: '부재 안내', body: '[{사이트}] {이름}님, 문의 주신 건으로 연락드렸으나 통화가 어려워 문자 남깁니다. 편하신 시간을 회신 주시면 맞춰 연락드리겠습니다.' },
+      { label: '일정 확정', body: '[{사이트}] {이름}님, 요청하신 상담이 [일시]로 예약되었습니다. 변경이 필요하시면 이 번호로 회신 부탁드립니다.' }
+    ].concat(site.cat === '법률'
+      ? [{ label: '준비서류', body: '[{사이트}] {이름}님, 상담 시 지참하실 서류 안내드립니다.\n- 신분증\n- 소득 증빙\n- 관련 자료(계약서·진단서 등)\n문의: [대표번호]' }]
+      : [{ label: '창업 안내서', body: '[{사이트}] {이름}님, 요청하신 창업 안내서를 보내드립니다: [안내서 링크]\n검토 후 궁금한 점 편하게 문의 주세요.' }]);
+    var draft = s.draft || '', b = this.bytes(draft);
+    var today = items.filter(function (i) { return i.at.indexOf('10.13') === 0; }).length;
+    var won = items.filter(function (i) { return i.status === '계약'; }).length;
+    return {
+      q: s.q || '', onQ: function (e) { self.setState({ q: e.target.value }); },
+      cats: cats, siteChips: siteChips,
+      mineStyle: chip(mine), toggleMine: function () { self.setState({ mine: !mine }); },
+      kToday: today, kUnassigned: items.filter(function (i) { return i.owner === '미배정'; }).length,
+      kCb: items.filter(function (i) { return i.cb && i.cb.indexOf('10.13') === 0; }).length,
+      kWon: won + ' / ' + items.length,
+      cols: cols, open: open, close: function () { self.setState({ open: false }); },
+      sel: Object.assign({}, sel0, { siteName: site.name, cat: site.cat, dot: dot(site.color), cbLabel: sel0.cb || '미지정', logs: logs }),
+      steps: steps,
+      holdStyle: small(sel0.status === '보류'), endStyle: small(sel0.status === '종결'),
+      setHold: function () { setStatus('보류'); }, setEnd: function () { setStatus('종결'); },
+      isSms: mode === 'sms',
+      memoTabStyle: tab(mode === 'memo'), smsTabStyle: tab(mode === 'sms'),
+      modeMemo: function () { self.setState({ mode: 'memo' }); }, modeSms: function () { self.setState({ mode: 'sms' }); },
+      tpls: T.map(function (t) { return { label: t.label, apply: function () { self.setState({ draft: fill(t.body), mode: 'sms' }); } }; }),
+      draft: draft, onDraft: function (e) { self.setState({ draft: e.target.value }); },
+      placeholder: mode === 'sms' ? sel0.name + '님께 보낼 문자 (발신번호 [대표번호])' : '통화 내용, 다음 액션을 기록하세요',
+      hint: mode === 'sms' ? b + ' byte · ' + (b > 90 ? 'LMS 장문' : 'SMS 단문') : '팀원 모두에게 보이는 내부 메모입니다',
+      submitLabel: mode === 'sms' ? '문자 보내기' : '메모 남기기',
+      submit: function () { var m = ((self.state && self.state.draft) || '').trim(); if (!m) return; self.addLog(sel0.id, mode === 'sms' ? '문자' : '메모', m); self.setState({ draft: '' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

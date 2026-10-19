@@ -1,0 +1,25 @@
+{
+  "name": "형사",
+  "category": "legal",
+  "inquiry_type_keys": ["형사", "경찰 출석", "고소 대응", "고소", "피의자", "피해자"],
+  "schema": {
+    "sections": [
+      {"title": "사건 개요", "fields": [
+        {"key": "side", "label": "입장", "type": "radio", "options": ["피의자", "피해자", "참고인"], "required": true},
+        {"key": "charge", "label": "죄명", "type": "select", "options": ["폭행·상해", "사기", "음주·무면허", "성범죄", "마약", "명예훼손·모욕", "교통사고(형사)", "기타"], "required": true},
+        {"key": "stage", "label": "사건 단계", "type": "radio", "options": ["고소 전", "경찰 조사", "검찰 송치", "기소", "재판"], "required": true},
+        {"key": "hearing_date", "label": "출석·재판 일시", "type": "date"},
+        {"key": "detained", "label": "구속 여부", "type": "bool"}
+      ]},
+      {"title": "합의·이력", "fields": [
+        {"key": "settlement", "label": "합의 여부", "type": "radio", "options": ["미시도", "진행 중", "합의 완료", "결렬"]},
+        {"key": "priors", "label": "전과", "type": "radio", "options": ["없음", "동종", "이종"]},
+        {"key": "evidence", "label": "증거자료 보유", "type": "multi", "options": ["문자·카톡", "녹취", "CCTV·영상", "송금내역", "진단서", "목격자", "없음"]}
+      ]},
+      {"title": "요청·판단", "fields": [
+        {"key": "requests", "label": "요청사항", "type": "multi", "options": ["조사 동행", "의견서", "합의 중재", "재판 변론"]},
+        {"key": "note", "label": "특이사항", "type": "textarea"}
+      ]}
+    ]
+  }
+}

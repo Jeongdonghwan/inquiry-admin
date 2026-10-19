@@ -1,0 +1,29 @@
+{
+  "name": "개인회생·파산",
+  "category": "legal",
+  "inquiry_type_keys": ["개인회생", "개인파산", "회생", "파산"],
+  "schema": {
+    "sections": [
+      {"title": "채무 현황", "fields": [
+        {"key": "total_debt", "label": "총 채무액", "type": "number", "unit": "만원", "required": true},
+        {"key": "debt_kinds", "label": "채무 종류", "type": "multi", "options": ["신용카드", "카드론", "은행 신용대출", "저축은행·캐피탈", "대부업", "사채", "세금·4대보험 체납", "개인 채무"]},
+        {"key": "creditor_count", "label": "채권자 수", "type": "number", "unit": "곳"},
+        {"key": "overdue", "label": "연체 상태", "type": "radio", "options": ["연체 없음", "1~3개월", "3개월 이상", "추심 진행 중"]},
+        {"key": "has_lawsuit", "label": "소송·압류·경매 진행 여부", "type": "bool"},
+        {"key": "lawsuit_detail", "label": "진행 내용", "type": "text", "show_if": {"key": "has_lawsuit", "eq": true}}
+      ]},
+      {"title": "소득·재산", "fields": [
+        {"key": "job_type", "label": "소득 형태", "type": "select", "options": ["급여소득(4대보험)", "급여소득(비정규·일용)", "사업소득", "프리랜서", "무직", "기타"], "required": true},
+        {"key": "monthly_income", "label": "월 실수령", "type": "number", "unit": "만원", "required": true},
+        {"key": "dependents", "label": "부양가족 수", "type": "number", "unit": "명"},
+        {"key": "assets", "label": "보유 재산", "type": "multi", "options": ["자가 주택", "전세·월세 보증금", "자동차", "예금·적금", "보험 해지환급금", "없음"]},
+        {"key": "asset_value", "label": "재산 합계(추정)", "type": "number", "unit": "만원"}
+      ]},
+      {"title": "이력·판단", "fields": [
+        {"key": "prior_case", "label": "과거 회생·파산·워크아웃 이력", "type": "radio", "options": ["없음", "회생", "파산", "신복위 워크아웃"]},
+        {"key": "fit", "label": "적합 절차(상담원 판단)", "type": "select", "options": ["개인회생", "개인파산", "신복위 워크아웃", "판단 보류", "해당 없음"]},
+        {"key": "note", "label": "특이사항", "type": "textarea"}
+      ]}
+    ]
+  }
+}

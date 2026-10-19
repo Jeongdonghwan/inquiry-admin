@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>상담지 탭 — 개인회생</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1f4fc4}a:hover{color:#163a91}
+input,select,textarea,button{font-family:inherit}
+.seg:focus-visible,.cb:focus-visible{outline:2px solid #1f4fc4;outline-offset:1px}
+</style>
+</helmet>
+<div style="width: 480px; box-sizing: border-box; background: #ffffff; border: 1px solid #dde0e6; border-radius: 4px; font-family: 'IBM Plex Sans KR', sans-serif; color: #1b1f27; font-size: 14px; display: flex; flex-direction: column">
+
+  <div style="padding: 18px 20px 14px; border-bottom: 1px solid #e6e8ec; display: flex; flex-direction: column; gap: 8px">
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #5d6575"><span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #c2410c"></span>회생파산 상담센터 · 법률 · <span style="font-family: 'IBM Plex Mono', monospace">No.2026101301</span></div>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px">
+      <h2 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px">박정훈 <span style="font-size: 14px; font-weight: 500; color: #3d4452">개인회생</span></h2>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px">010-4821-3307</span>
+    </div>
+  </div>
+
+  <div role="tablist" style="display: flex; border-bottom: 1px solid #e6e8ec; padding: 0 20px">
+    <button role="tab" style="height: 44px; padding: 0 4px; margin-right: 20px; border: 0; background: transparent; font-size: 14px; color: #5d6575; cursor: pointer">상담 기록 2</button>
+    <button role="tab" style="height: 44px; padding: 0 4px; margin-right: 20px; border: 0; background: transparent; font-size: 14px; font-weight: 700; color: #1b1f27; box-shadow: inset 0 -2px 0 #1c2230; cursor: pointer; display: flex; align-items: center; gap: 6px">상담지<span style="{{ dotStyle }}"></span></button>
+    <button role="tab" style="height: 44px; padding: 0 4px; border: 0; background: transparent; font-size: 14px; color: #5d6575; cursor: pointer">문자 보내기</button>
+  </div>
+
+  <div style="padding: 14px 20px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap">
+      <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #5d6575">양식
+        <select value="{{ form }}" onChange="{{ onForm }}" style="height: 34px; border: 1px solid #cfd4dc; border-radius: 4px; padding: 0 8px; font-size: 13px; background: #ffffff; color: #1b1f27; font-weight: 600">
+          <option value="회생">개인회생·파산</option><option value="형사">형사</option><option value="민사">민사</option><option value="가사">가사(이혼·양육)</option><option value="교통">교통사고</option>
+        </select>
+      </label>
+      <div style="display: flex; align-items: center; gap: 10px">
+        <span style="font-size: 12px; color: #0b5a4c">{{ saveLabel }}</span>
+        <button style="height: 32px; padding: 0 10px; border: 1px solid #cfd4dc; background: #ffffff; border-radius: 4px; font-size: 12px; cursor: pointer">요약 복사</button>
+        <button style="height: 32px; padding: 0 10px; border: 1px solid #cfd4dc; background: #ffffff; border-radius: 4px; font-size: 12px; cursor: pointer">인쇄</button>
+      </div>
+    </div>
+
+    <!-- 섹션 1 -->
+    <section style="display: flex; flex-direction: column; gap: 12px">
+      <h3 style="margin: 0; padding-bottom: 6px; border-bottom: 1px solid #dde0e6; font-size: 12px; font-weight: 700; color: #5d6575; letter-spacing: 0.4px">채무 현황</h3>
+      <div style="display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 12px 12px; align-items: center">
+        <label for="debt" style="font-size: 13px; color: #3d4452">총 채무액 <span style="color: #e8590c">*</span></label>
+        <span style="display: flex; align-items: center; gap: 6px"><input id="debt" value="{{ debt }}" onChange="{{ onDebt }}" style="width: 120px; height: 36px; border: 1px solid #cfd4dc; border-radius: 4px; padding: 0 10px; font-size: 14px; font-family: 'IBM Plex Mono', monospace; text-align: right"><span style="font-size: 13px; color: #5d6575">만원</span></span>
+
+        <span style="font-size: 13px; color: #3d4452; align-self: start; padding-top: 8px">채무 종류</span>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px">
+          <sc-for list="{{ kinds }}" as="k" hint-placeholder-count="8">
+            <button class="cb" onClick="{{ k.toggle }}" style="{{ k.style }}"><span style="{{ k.box }}"><sc-if value="{{ k.on }}" hint-placeholder-val="{{ false }}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="4" aria-hidden="true"><path d="M4 12l5 5L20 7"></path></svg></sc-if></span>{{ k.label }}</button>
+          </sc-for>
+        </div>
+
+        <label for="cred" style="font-size: 13px; color: #3d4452">채권자 수</label>
+        <span style="display: flex; align-items: center; gap: 6px"><input id="cred" value="6" style="width: 72px; height: 36px; border: 1px solid #cfd4dc; border-radius: 4px; padding: 0 10px; font-size: 14px; font-family: 'IBM Plex Mono', monospace; text-align: right"><span style="font-size: 13px; color: #5d6575">곳</span></span>
+
+        <span style="font-size: 13px; color: #3d4452">연체 상태</span>
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid #cfd4dc; border-radius: 4px; overflow: hidden">
+          <sc-for list="{{ overdue }}" as="o" hint-placeholder-count="4">
+            <button class="seg" onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</button>
+          </sc-for>
+        </div>
+
+        <span style="font-size: 13px; color: #3d4452">소송·압류·경매</span>
+        <button class="cb" onClick="{{ toggleLawsuit }}" style="{{ lawsuitStyle }}"><span style="{{ lawsuitBox }}"><sc-if value="{{ lawsuit }}" hint-placeholder-val="{{ true }}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="4" aria-hidden="true"><path d="M4 12l5 5L20 7"></path></svg></sc-if></span>진행 중</button>
+
+        <sc-if value="{{ lawsuit }}" hint-placeholder-val="{{ true }}">
+          <label for="ls" style="font-size: 13px; color: #3d4452; padding-left: 12px; border-left: 2px solid #dde0e6">진행 내용</label>
+          <input id="ls" value="급여 압류 예고 통지 받음 (OO카드)" style="height: 36px; border: 1px solid #cfd4dc; border-radius: 4px; padding: 0 10px; font-size: 14px">
+        </sc-if>
+      </div>
+    </section>
+
+    <!-- 섹션 2 -->
+    <section style="display: flex; flex-direction: column; gap: 12px">
+      <h3 style="margin: 0; padding-bottom: 6px; border-bottom: 1px solid #dde0e6; font-size: 12px; font-weight: 700; color: #5d6575; letter-spacing: 0.4px">소득 · 재산</h3>
+      <div style="display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 12px 12px; align-items: center">
+        <label for="job" style="font-size: 13px; color: #3d4452">소득 형태 <span style="color: #e8590c">*</span></label>
+        <select id="job" style="height: 36px; border: 1px solid #cfd4dc; border-radius: 4px; padding: 0 8px; font-size: 14px; background: #ffffff">
+          <option>급여소득(4대보험)</option><option>급여소득(비정규·일용)</option><option>사업소득</option><option>프리랜서</option><option>무직</option><option>기타</option>
+        </select>
+
+        <label for="inc" style="font-size: 13px; color: #3d4452">월 실수령 <span style="color: #e8590c">*</span></label>
+        <span style="display: flex; align-items: center; gap: 6px"><input id="inc" value="280" style="width: 120px; height: 36px; border: 1px solid #cfd4dc; border-radius: 4px; padding: 0 10px; font-size: 14px; font-family: 'IBM Plex Mono', monospace; text-align: right"><span style="font-size: 13px; color: #5d6575">만원</span></span>
+
+        <label for="dep" style="font-size: 13px; color: #3d4452">부양가족 수</label>
+        <span style="display: flex; align-items: center; gap: 6px"><input id="dep" value="{{ dep }}" onChange="{{ onDep }}" placeholder="0" style="{{ depStyle }}"><span style="font-size: 13px; color: #5d6575">명</span></span>
+
+        <span style="font-size: 13px; color: #3d4452; align-self: start; padding-top: 8px">보유 재산</span>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px">
+          <sc-for list="{{ assets }}" as="a" hint-placeholder-count="6">
+            <button class="cb" onClick="{{ a.toggle }}" style="{{ a.style }}"><span style="{{ a.box }}"><sc-if value="{{ a.on }}" hint-placeholder-val="{{ false }}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="4" aria-hidden="true"><path d="M4 12l5 5L20 7"></path></svg></sc-if></span>{{ a.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <!-- 섹션 3 -->
+    <section style="display: flex; flex-direction: column; gap: 12px">
+      <h3 style="margin: 0; padding-bottom: 6px; border-bottom: 1px solid #dde0e6; font-size: 12px; font-weight: 700; color: #5d6575; letter-spacing: 0.4px">이력 · 판단</h3>
+      <div style="display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 12px 12px; align-items: center">
+        <span style="font-size: 13px; color: #3d4452">과거 절차 이력</span>
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid #cfd4dc; border-radius: 4px; overflow: hidden">
+          <sc-for list="{{ prior }}" as="p" hint-placeholder-count="4">
+            <button class="seg" onClick="{{ p.pick }}" style="{{ p.style }}">{{ p.label }}</button>
+          </sc-for>
+        </div>
+
+        <label for="fit" style="font-size: 13px; color: #3d4452">적합 절차<span style="display: block; font-size: 11px; color: #8a93a6; font-weight: 400">상담원 판단</span></label>
+        <select id="fit" style="height: 36px; border: 1px solid #cfd4dc; border-radius: 4px; padding: 0 8px; font-size: 14px; background: #ffffff; font-weight: 600">
+          <option>개인회생</option><option>개인파산</option><option>신복위 워크아웃</option><option>판단 보류</option><option>해당 없음</option>
+        </select>
+
+        <label for="note" style="font-size: 13px; color: #3d4452; align-self: start; padding-top: 8px">특이사항</label>
+        <textarea id="note" rows="3" style="border: 1px solid #cfd4dc; border-radius: 4px; padding: 8px 10px; font-size: 14px; line-height: 1.5; resize: vertical">배우자 명의 재산 없음. 카드론 2건은 최근 6개월 내 발생 — 사용 내역 확인 필요.</textarea>
+      </div>
+    </section>
+
+    <div style="padding: 10px 12px; background: #f5f6f8; border-radius: 4px; font-size: 12px; color: #5d6575; line-height: 1.6">마지막 저장 <span style="font-family: 'IBM Plex Mono', monospace; color: #1b1f27">10.19 18:52</span> · 윤서영 팀장 · 양식 v3<br>항목 이름과 선택지는 설정 › 상담지 양식 관리에서 바꿀 수 있습니다.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":480,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var self = this, s = this.state || {};
+    var kindsOn = s.kinds || { '신용카드': true, '카드론': true, '은행 신용대출': true };
+    var assetsOn = s.assets || { '전세·월세 보증금': true };
+    var lawsuit = s.lawsuit == null ? true : s.lawsuit;
+    var cbStyle = function (on) { return 'all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;min-height:30px;font-size:13px;cursor:pointer;' + (on ? 'color:#1b1f27;font-weight:600' : 'color:#3d4452'); };
+    var box = function (on) { return 'display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:3px;flex:none;' + (on ? 'background:#1c2230;border:1px solid #1c2230' : 'background:#ffffff;border:1px solid #9aa1ae'); };
+    var mk = function (list, map, key) {
+      return list.map(function (l) {
+        var on = !!map[l];
+        return { label: l, on: on, style: cbStyle(on), box: box(on), toggle: function () { var n = Object.assign({}, map); n[l] = !on; var st = {}; st[key] = n; st.saved = true; self.setState(st); } };
+      });
+    };
+    var segStyle = function (on, last) { return 'border:0;' + (last ? '' : 'border-right:1px solid #cfd4dc;') + 'height:34px;font-size:12px;cursor:pointer;padding:0 2px;' + (on ? 'background:#1c2230;color:#ffffff;font-weight:700' : 'background:#ffffff;color:#40454f'); };
+    var seg = function (list, cur, key) { return list.map(function (l, i) { return { label: l, style: segStyle(cur === l, i === list.length - 1), pick: function () { var st = {}; st[key] = l; st.saved = true; self.setState(st); } }; }); };
+    var dep = s.dep == null ? '' : s.dep;
+    var missing = dep === '';
+    return {
+      form: s.form || '회생', onForm: function (e) { self.setState({ form: e.target.value }); },
+      dotStyle: 'display:inline-block;width:6px;height:6px;border-radius:50%;background:#e8590c;' + (missing ? '' : 'visibility:hidden'),
+      saveLabel: s.saved ? '저장됨 ' + (function () { var d = new Date(), p = function (n) { return (n < 10 ? '0' : '') + n; }; return p(d.getHours()) + ':' + p(d.getMinutes()); })() : '저장됨 18:52',
+      debt: s.debt == null ? '7,800' : s.debt, onDebt: function (e) { self.setState({ debt: e.target.value, saved: true }); },
+      kinds: mk(['신용카드', '카드론', '은행 신용대출', '저축은행·캐피탈', '대부업', '사채', '세금·4대보험 체납', '개인 채무'], kindsOn, 'kinds'),
+      overdue: seg(['연체 없음', '1~3개월', '3개월 이상', '추심 진행 중'], s.overdue || '1~3개월', 'overdue'),
+      lawsuit: lawsuit, lawsuitStyle: cbStyle(lawsuit), lawsuitBox: box(lawsuit), toggleLawsuit: function () { self.setState({ lawsuit: !lawsuit, saved: true }); },
+      dep: dep, onDep: function (e) { self.setState({ dep: e.target.value, saved: true }); },
+      depStyle: 'width:72px;height:36px;border:1px solid ' + (missing ? '#e8590c' : '#cfd4dc') + ';border-radius:4px;padding:0 10px;font-size:14px;font-family:IBM Plex Mono,monospace;text-align:right',
+      assets: mk(['자가 주택', '전세·월세 보증금', '자동차', '예금·적금', '보험 해지환급금', '없음'], assetsOn, 'assets'),
+      prior: seg(['없음', '회생', '파산', '워크아웃'], s.prior || '없음', 'prior')
+    };
+  }
+}
+</script>
+</body>
+</html>
