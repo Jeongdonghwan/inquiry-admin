@@ -4,25 +4,34 @@
   "inquiry_type_keys": ["개인회생", "개인파산", "회생", "파산"],
   "schema": {
     "sections": [
-      {"title": "채무 현황", "fields": [
-        {"key": "total_debt", "label": "총 채무액", "type": "number", "unit": "만원", "required": true},
-        {"key": "debt_kinds", "label": "채무 종류", "type": "multi", "options": ["신용카드", "카드론", "은행 신용대출", "저축은행·캐피탈", "대부업", "사채", "세금·4대보험 체납", "개인 채무"]},
-        {"key": "creditor_count", "label": "채권자 수", "type": "number", "unit": "곳"},
-        {"key": "overdue", "label": "연체 상태", "type": "radio", "options": ["연체 없음", "1~3개월", "3개월 이상", "추심 진행 중"]},
-        {"key": "has_lawsuit", "label": "소송·압류·경매 진행 여부", "type": "bool"},
-        {"key": "lawsuit_detail", "label": "진행 내용", "type": "text", "show_if": {"key": "has_lawsuit", "eq": true}}
+      {"title": "상담 정보", "fields": [
+        {"key": "ad_media", "label": "광고매체", "type": "radio", "options": ["뉴스", "홈페이지", "블로그", "카페", "애드릭스", "소개", "기타", "SMS"]},
+        {"key": "summary", "label": "상담요약", "type": "text"}
       ]},
-      {"title": "소득·재산", "fields": [
-        {"key": "job_type", "label": "소득 형태", "type": "select", "options": ["급여소득(4대보험)", "급여소득(비정규·일용)", "사업소득", "프리랜서", "무직", "기타"], "required": true},
-        {"key": "monthly_income", "label": "월 실수령", "type": "number", "unit": "만원", "required": true},
-        {"key": "dependents", "label": "부양가족 수", "type": "number", "unit": "명"},
-        {"key": "assets", "label": "보유 재산", "type": "multi", "options": ["자가 주택", "전세·월세 보증금", "자동차", "예금·적금", "보험 해지환급금", "없음"]},
-        {"key": "asset_value", "label": "재산 합계(추정)", "type": "number", "unit": "만원"}
+      {"title": "인적사항", "fields": [
+        {"key": "case_kind", "label": "사건종류", "type": "select", "options": ["개인회생", "개인파산", "신복위 워크아웃", "판단 보류"], "required": true},
+        {"key": "age", "label": "나이", "type": "number", "unit": "세"},
+        {"key": "total_debt", "label": "채무액", "type": "number", "unit": "만원", "required": true},
+        {"key": "address", "label": "주소", "type": "text"}
       ]},
-      {"title": "이력·판단", "fields": [
-        {"key": "prior_case", "label": "과거 회생·파산·워크아웃 이력", "type": "radio", "options": ["없음", "회생", "파산", "신복위 워크아웃"]},
-        {"key": "fit", "label": "적합 절차(상담원 판단)", "type": "select", "options": ["개인회생", "개인파산", "신복위 워크아웃", "판단 보류", "해당 없음"]},
-        {"key": "note", "label": "특이사항", "type": "textarea"}
+      {"title": "수임내용", "fields": [
+        {"key": "fee", "label": "수임료", "type": "number", "unit": "만원"},
+        {"key": "pay_method", "label": "방법", "type": "select", "options": ["일시납", "분납", "카드", "계좌이체", "현금"]},
+        {"key": "deposit", "label": "계약금", "type": "number", "unit": "만원"},
+        {"key": "debt_cert", "label": "부채증명 발급", "type": "radio", "options": ["미발급", "발급 중", "완료"]},
+        {"key": "service_fee", "label": "송달료", "type": "number", "unit": "원"}
+      ]},
+      {"title": "채무내역", "fields": [
+        {"key": "creditor_count", "label": "채권자수", "type": "number", "unit": "곳"},
+        {"key": "overdue_since", "label": "연체시기", "type": "text", "help": "예: 2025년 3월부터"},
+        {"key": "has_lawsuit", "label": "소송·압류·경매 진행", "type": "bool"},
+        {"key": "lawsuit_detail", "label": "진행 내용", "type": "text", "show_if": {"key": "has_lawsuit", "eq": true}},
+        {"key": "debt_detail", "label": "내용", "type": "textarea", "help": "채권자별 금액, 카드·대출 종류 등"}
+      ]},
+      {"title": "재산유무", "fields": [
+        {"key": "job_type", "label": "직장", "type": "select", "options": ["급여소득(4대보험)", "급여소득(비정규·일용)", "사업소득", "프리랜서", "무직", "기타"], "required": true},
+        {"key": "monthly_income", "label": "소득", "type": "number", "unit": "만원", "help": "월 실수령", "required": true},
+        {"key": "asset_detail", "label": "내용", "type": "textarea", "help": "주택·보증금·차량·예금·보험 등"}
       ]}
     ]
   }

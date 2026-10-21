@@ -278,23 +278,20 @@ dialog.modal::backdrop{background:rgba(27,31,39,.45)}
 .fb-preview .sheet{padding:14px;max-width:520px}
 
 /* ---- 로그인 ---- */
-.login-body{display:grid;place-items:center;min-height:100vh;margin:0;padding:24px}
-.login-shell{display:grid;grid-template-columns:400px 400px;width:min(800px,100%);background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;box-shadow:0 20px 60px rgba(27,31,39,.12)}
-.login-side{background:var(--sidebar);color:var(--sidebar-text);padding:40px 36px;display:flex;flex-direction:column;gap:28px}
-.login-side .brand{padding:0}
-.login-side h1{margin:0;font-size:22px;line-height:1.45;color:#fff;font-weight:700;letter-spacing:-.3px}
-.login-points{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
-.login-points li{display:flex;flex-direction:column;gap:2px;padding-left:14px;border-left:2px solid var(--primary)}
-.login-points b{color:#fff;font-size:13px}.login-points span{font-size:12px;color:#8a93a6}
-.login-foot{margin-top:auto;color:#5d6575}
-.login-box{padding:40px 36px;display:flex;flex-direction:column;gap:14px;justify-content:center}
-.login-box h2{margin:0;font-size:22px}
-.login-box label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
-.login-box input{height:42px;border:1px solid #cfd4dc;border-radius:var(--radius);padding:0 12px;font-size:14px}
-.login-box input:focus{outline:2px solid var(--primary);outline-offset:-1px;border-color:var(--primary)}
-.login-box .btn{height:44px;margin-top:6px;justify-content:center;font-size:14px}
-.login-box .error{margin:0;color:#9a3400;background:#fde6d6;padding:8px 12px;border-radius:var(--radius);font-size:13px}
-@media (max-width:860px){.login-shell{grid-template-columns:1fr}.login-side{display:none}}
+.login-body{display:grid;place-items:center;min-height:100vh;margin:0;padding:24px;background:linear-gradient(160deg,#eef0f3 0%,#e3e7ee 55%,#d9dfe9 100%)}
+.login-card{width:min(420px,100%);background:#fff;border:1px solid var(--line);border-radius:10px;padding:44px 40px 32px;box-shadow:0 24px 60px rgba(27,31,39,.12);display:flex;flex-direction:column;gap:26px}
+.login-brand{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
+.login-mark{width:56px;height:56px;border-radius:50%;background:var(--sidebar);color:#fff;display:grid;place-items:center;margin-bottom:6px}
+.login-mark svg{width:28px;height:28px}
+.login-brand h1{margin:0;font-size:24px;font-weight:700;letter-spacing:-.4px;color:var(--text)}
+.login-brand p{margin:0;font-size:13px;color:var(--muted);letter-spacing:.2px}
+.login-form{display:flex;flex-direction:column;gap:14px}
+.login-form label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
+.login-form input{height:44px;border:1px solid #cfd4dc;border-radius:6px;padding:0 14px;font-size:15px;background:#fafbfc}
+.login-form input:focus{outline:2px solid var(--primary);outline-offset:-1px;border-color:var(--primary);background:#fff}
+.login-form .btn{height:46px;margin-top:6px;justify-content:center;font-size:15px;border-radius:6px}
+.login-form .error{margin:0;color:#9a3400;background:#fde6d6;padding:8px 12px;border-radius:var(--radius);font-size:13px}
+.login-note{margin:0;text-align:center;font-size:12px;color:#8a93a6}
 
 /* ---- 상세 페이지 (새 탭) ---- */
 .detail-page{display:grid;grid-template-columns:minmax(380px,460px) minmax(0,1fr);gap:16px;align-items:start}
@@ -302,6 +299,17 @@ dialog.modal::backdrop{background:rgba(27,31,39,.45)}
 .sheet-page-head{display:flex;justify-content:space-between;align-items:baseline;padding:14px 20px;border-bottom:1px solid var(--line)}
 .sheet-page-head h3{margin:0;font-size:16px}
 .sheet-page-body{padding:18px 20px 24px}
+/* 상세 페이지 상담지: 표 형태 (회색 라벨 칸) */
+.sheet-page .sheet-sec{margin:0 0 18px}
+.sheet-page .sheet-sec legend{font-size:14px;font-weight:700;color:var(--text);letter-spacing:0;border:0;padding:0 0 8px;display:flex;align-items:center;gap:6px}
+.sheet-page .sheet-sec legend::before{content:'';width:12px;height:12px;border:1.5px solid var(--text);border-radius:2px;background:linear-gradient(135deg,transparent 45%,var(--text) 45%,var(--text) 55%,transparent 55%)}
+.sheet-page .sf{grid-template-columns:130px 1fr;gap:0;padding:0;border:1px solid var(--line);border-top:0;align-items:stretch}
+.sheet-page .sheet-sec .sf:first-of-type{border-top:1px solid var(--line)}
+.sheet-page .sf-label{background:#f3f4f6;padding:10px 12px;border-right:1px solid var(--line);font-weight:600;font-size:13px;display:flex;align-items:center}
+.sheet-page .sf-input{padding:7px 12px;justify-content:center}
+.sheet-page .sf.missing .sf-label{background:#fff3e8}
+.sheet-page .sf .multi{grid-template-columns:repeat(3,1fr)}
+.sheet-page .sf-input textarea{min-height:110px}
 @media (max-width:1024px){.detail-page{grid-template-columns:1fr}.detail-page .detail{position:static;max-height:none}}
 
 /* ---- 대시보드 ---- */

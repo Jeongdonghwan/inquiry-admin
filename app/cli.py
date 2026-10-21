@@ -28,6 +28,23 @@ def register_cli(app: Flask) -> None:
         run_seed(reset=reset)
         click.echo("seed 완료")
 
+    @app.cli.command("seed-forms")
+    def seed_forms():
+        """app/seeds/consult_forms/*.json 을 이름 기준으로 추가·갱신 (운영에서도 사용 가능, 답변은 보존)."""
+        from .models import ConsultForm
+        from .seeds.seed_data import load_forms
+        n = 0
+        for i, f in enumerate(load_forms()):
+            cf = ConsultForm.query.filter_by(name=f["name"]).first()
+            if cf is None:
+                cf = ConsultForm(name=f["name"], sort_order=i, version=0)
+                db.session.add(cf)
+            cf.category, cf.inquiry_type_keys, cf.schema_json = f.get("category"), f["inquiry_type_keys"], f["schema"]
+            cf.version += 1
+            n += 1
+        db.session.commit()
+        click.echo(f"양식 {n}개 반영")
+
     @app.cli.command("sms-worker")
     def sms_worker():
         """crontab 1분 주기: 대기·예약 문자 발송."""

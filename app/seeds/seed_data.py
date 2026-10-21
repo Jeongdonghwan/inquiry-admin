@@ -126,9 +126,10 @@ def _inquiries():
 
 # 상담지 답변 예시: 문의 번호(1-based) → (양식 파일 stem, answers)
 SHEETS = {
-    1: ("01_rehab", {"total_debt": 7800, "debt_kinds": ["신용카드", "카드론", "은행 신용대출"], "creditor_count": 5, "overdue": "1~3개월",
-                     "has_lawsuit": True, "lawsuit_detail": "카드사 지급명령 1건", "job_type": "급여소득(4대보험)", "monthly_income": 280,
-                     "assets": ["전세·월세 보증금"], "asset_value": 3000, "prior_case": "없음"}),
+    1: ("01_rehab", {"ad_media": "홈페이지", "summary": "카드론 포함 7,800만원, 급여소득자. 회생 적합 검토", "case_kind": "개인회생", "age": 41,
+                     "total_debt": 7800, "address": "경기 수원시 영통구", "creditor_count": 5, "overdue_since": "2026년 6월부터",
+                     "has_lawsuit": True, "lawsuit_detail": "카드사 지급명령 1건", "debt_detail": "신용카드 2,100 / 카드론 3,200 / 은행 신용대출 2,500",
+                     "job_type": "급여소득(4대보험)", "monthly_income": 280, "asset_detail": "전세보증금 3,000만원, 차량 없음"}),
     5: ("05_traffic", {"side": "피해자", "accident_date": None, "fault_ratio": 0, "injury": "경상 염좌", "diagnosis_weeks": 4,
                        "treatment": "입원", "hospital_days": 14, "insurer_offer": 350, "insurer_contacted": True,
                        "docs": ["진단서", "입퇴원확인서"]}),
