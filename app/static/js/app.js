@@ -37,67 +37,23 @@ const App = (() => {
   $('[data-toggle="filters"]')?.addEventListener('click', () => $('#filters').classList.toggle('open'));
   if ($('#manual .flash')) $('#manual').showModal();
 
-  // ---------- 목록 ↔ 상세 (A안) / 보드 ↔ 서랍 (B안) ----------
-  const detail = $('#detail'), rowsEl = $('#rows'), drawer = $('#drawer');
-  const isDrawer = !!drawer;
-  const idOf = el => el?.dataset.id;
-  const viewQS = () => isDrawer ? '?layout=drawer' : '';
-  const target = () => isDrawer ? $('.drawer-body', drawer) : detail;
+  // ---------- 상세 페이지 (새 탭) ----------
+  const detail = $('#detail');
+  const target = () => detail;
+  function applyResult(id, j) { target().innerHTML = j.panel_html; bindPanel(target()); }
+  const act = (id, path, data) => post(`/inquiries/${id}/${path}`, data).then(j => applyResult(id, j));
 
-  async function openPanel(id, push = true) {
-    const r = await fetch(`/inquiries/${id}/panel${viewQS()}`); if (!r.ok) return toast('문의를 열 수 없습니다');
-    target().innerHTML = await r.text();
-    $$('.rowbtn, .card').forEach(el => el.classList.toggle('on', idOf(el) === String(id)));
-    if (isDrawer) drawer.classList.add('open'); else $('.split')?.classList.add('has-sel', 'mobile-detail');
-    if (push) { const u = new URL(location); u.searchParams.set('id', id); history.replaceState(null, '', u); }
-    bindPanel(target());
-  }
-  rowsEl?.addEventListener('click', e => { const row = e.target.closest('.rowbtn'); if (row) openPanel(idOf(row)); });
-  document.addEventListener('keydown', e => {
-    if (!rowsEl || ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) || !['ArrowUp', 'ArrowDown'].includes(e.key)) return;
-    const rows = $$('.rowbtn'), i = rows.findIndex(r => r.classList.contains('on'));
-    const next = rows[i + (e.key === 'ArrowDown' ? 1 : -1)]; if (next) { e.preventDefault(); openPanel(idOf(next)); next.scrollIntoView({ block: 'nearest' }); }
-  });
-
-  function swapRow(id, html) {
-    const old = $(`.rowbtn[data-id="${id}"]`); if (!old || !html) return;
-    const t = document.createElement('div'); t.innerHTML = html; old.replaceWith(t.firstElementChild);
-  }
-  function swapCard(id, html) {
-    const old = $(`.card[data-id="${id}"]`); if (!old || !html) return;
-    const t = document.createElement('div'); t.innerHTML = html; const card = t.firstElementChild;
-    old.remove(); $(`[data-cards="${card.dataset.status}"]`)?.prepend(card);
-    $$('.bcol').forEach(c => { const n = $('header .mono', c); if (n) n.textContent = $$('.card', c).length; });
-  }
-  function applyResult(id, j) {
-    target().innerHTML = j.panel_html; bindPanel(target());
-    if (j.row_html) swapRow(id, j.row_html);
-    if (j.card_html) swapCard(id, j.card_html);
-  }
-  const act = (id, path, data) => post(`/inquiries/${id}/${path}${viewQS()}`, data).then(j => applyResult(id, j));
-
-  if (drawer) {
-    const closeDrawer = () => { drawer.classList.remove('open'); const u = new URL(location); u.searchParams.delete('id'); history.replaceState(null, '', u); };
-    $('.board')?.addEventListener('click', e => { const c = e.target.closest('.card'); if (c) openPanel(idOf(c)); });
-    $('.drawer-close', drawer)?.addEventListener('click', closeDrawer);
-    document.addEventListener('keydown', e => e.key === 'Escape' && closeDrawer());
-    document.addEventListener('click', e => { if (drawer.classList.contains('open') && !drawer.contains(e.target) && !e.target.closest('.card')) closeDrawer(); });
-  }
-
-  // ---------- 상세 패널 바인딩 (목록·서랍 공용) ----------
+  // ---------- 상세 패널 바인딩 ----------
   function bindPanel(root) {
     const dp = $('.dp', root); if (!dp) return;
     const id = dp.dataset.id;
-    $$('[data-back]', dp).forEach(b => b.onclick = () => { $('.split')?.classList.remove('mobile-detail'); drawer?.classList.remove('open'); });
-    $$('[data-pick]', dp).forEach(a => a.onclick = e => { e.preventDefault(); openPanel(a.dataset.pick); });
+    $$('[data-pick]', dp).forEach(a => { a.target = '_blank'; a.href = `/inquiries/${a.dataset.pick}`; });
     $('[data-call]', dp)?.addEventListener('click', () => { $$('[data-record^="call"]', dp).forEach(b => b.classList.add('pulse')); $('.dp-tabs [data-tab="log"]', dp)?.click(); });
     // 탭 (A안) · 작성기 전환 (B안)
     $$('[data-tab]', dp).forEach(b => b.onclick = () => {
       $$('.dp-tabs [data-tab]', dp).forEach(x => x.classList.toggle('on', x.dataset.tab === b.dataset.tab));
       $$('[data-pane]', dp).forEach(p => p.hidden = p.dataset.pane !== b.dataset.tab);
     });
-    // 상담지는 넓은 모달에서 작성
-    $$('[data-sheet-open]', dp).forEach(b => b.onclick = () => openSheetModal(b.dataset.sheetOpen, b.dataset.sheetTitle, b));
     $$('[data-ctab]', dp).forEach(b => b.onclick = () => { $$('[data-ctab]', dp).forEach(x => x.classList.toggle('on', x === b)); $$('[data-cpane]', dp).forEach(p => p.hidden = p.dataset.cpane !== b.dataset.ctab); });
     // 상태
     const closeBox = $('.close-reason', dp);
@@ -127,22 +83,13 @@ const App = (() => {
         const body = sms.value.trim(); if (!body) return toast('문자 내용을 입력하세요');
         if (/\{[^}]+\}/.test(body) && !confirm('치환되지 않은 {변수}가 남아 있습니다. 그대로 보낼까요?')) return;
         const data = { body }; if (b.dataset.smsSend === 'scheduled') { const at = $('[data-sms-at]', dp).value; if (!at) return toast('예약 일시를 선택하세요'); data.scheduled_at = at; }
-        const j = await post(`/inquiries/${id}/sms${viewQS()}`, data);
+        const j = await post(`/inquiries/${id}/sms`, data);
         applyResult(id, j); const root2 = target(), n = $('.sent-note', root2); if (n) { n.hidden = false; ($('.dp-tabs [data-tab="sms"]', root2) || $('[data-ctab="sms"]', root2))?.click(); }
       });
     }
   }
 
-  // ---------- 상담지 (모달) ----------
-  const sheetModal = $('#sheet-modal');
-  let sheetOpener = null;
-  async function openSheetModal(url, title, opener) {
-    sheetOpener = opener; $('[data-sheet-modal-title]', sheetModal).textContent = title || '';
-    const body = $('.sheet-modal-body', sheetModal); body.innerHTML = '<div class="muted small">불러오는 중…</div>';
-    sheetModal.showModal(); await loadSheet(body, url);
-  }
-  $('[data-sheet-modal-close]', sheetModal)?.addEventListener('click', () => sheetModal.close());
-  sheetModal?.addEventListener('click', e => { if (e.target === sheetModal) sheetModal.close(); });
+  // ---------- 상담지 (상세 페이지 오른쪽) ----------
   async function loadSheet(pane, url) { const r = await fetch(url); pane.innerHTML = await r.text(); pane.dataset.src = url; bindSheet(pane); }
   function collect(form) {
     const a = {};
@@ -168,8 +115,7 @@ const App = (() => {
         const j = await post(box.dataset.save, { form_id: box.dataset.formId, answers: collect(form) });
         state.textContent = '저장됨 ' + j.saved_at;
         $$('.sf.req', form).forEach(sf => sf.classList.toggle('missing', j.missing.includes($('.sf-label', sf).textContent.replace('*', ''))));
-        const dot = sheetOpener && $('.req-dot', sheetOpener);
-        if (sheetOpener) { if (!j.required_done && !dot) sheetOpener.insertAdjacentHTML('beforeend', ' <i class="req-dot"></i>'); else if (j.required_done && dot) dot.remove(); }
+
       } catch (e) { state.textContent = '저장 실패 — 다시 시도'; }
     };
     const schedule = debounce(save, 800);
@@ -179,7 +125,7 @@ const App = (() => {
     $$('.num input', form).forEach(i => i.addEventListener('blur', () => { const n = Number(i.value.replace(/,/g, '')); if (i.value && !isNaN(n)) i.value = n.toLocaleString(); }));
     $('[data-sheet-copy]', pane)?.addEventListener('click', async () => { const r = await fetch(box.dataset.txt); await navigator.clipboard.writeText(await r.text()); toast('상담지 요약을 복사했습니다'); });
     $('[data-sheet-print]', pane)?.addEventListener('click', () => { document.body.classList.add('print-sheet'); window.print(); setTimeout(() => document.body.classList.remove('print-sheet'), 500); });
-    $('[data-sheet-close]', pane)?.addEventListener('click', () => sheetModal.close());
+
   }
 
   // ---------- 문자 템플릿 편집: 미리보기 ----------
@@ -281,8 +227,9 @@ const App = (() => {
     refresh();
   })();
 
-  // 초기 바인딩: 목록 상세 또는 서랍이 서버 렌더링으로 열려 있을 때
+  // 초기 바인딩: 상세 페이지
   if (detail && $('.dp', detail)) bindPanel(detail);
-  if (drawer && $('.dp', drawer)) bindPanel(drawer);
-  return { post, toast, openPanel, bindPanel, applyResult };
+  const sheetInline = $('#sheet-inline');
+  if (sheetInline) { const body = $('.sheet-page-body', sheetInline); body.dataset.src = sheetInline.dataset.src; bindSheet(body); }
+  return { post, toast, bindPanel, applyResult };
 })();

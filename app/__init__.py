@@ -33,6 +33,7 @@ def create_app(config_object=Config) -> Flask:
     from .blueprints.api import bp as api_bp
     from .blueprints.auth import bp as auth_bp
     from .blueprints.board import bp as board_bp
+    from .blueprints.dashboard import bp as dashboard_bp
     from .blueprints.export import bp as export_bp
     from .blueprints.inquiries import bp as inquiries_bp
     from .blueprints.settings import bp as settings_bp
@@ -40,7 +41,7 @@ def create_app(config_object=Config) -> Flask:
     from .blueprints.sms import bp as sms_bp
     from .cli import register_cli
 
-    for b in (auth_bp, inquiries_bp, sheet_bp, board_bp, export_bp, sms_bp, settings_bp, api_bp):
+    for b in (auth_bp, dashboard_bp, inquiries_bp, sheet_bp, board_bp, export_bp, sms_bp, settings_bp, api_bp):
         app.register_blueprint(b)
     csrf.exempt(api_bp)  # 외부 사이트 접수 API는 키 인증
     register_cli(app)
@@ -56,7 +57,7 @@ def create_app(config_object=Config) -> Flask:
 
     @app.route("/")
     def index():
-        return redirect(url_for("inquiries.list_view"))
+        return redirect(url_for("dashboard.dashboard"))
 
     # ---- Jinja 필터 (13. 코딩 규칙) ----
     @app.template_filter("kdate")

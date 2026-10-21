@@ -1,4 +1,4 @@
-<button type="button" class="rowbtn cols-inq {{ 'on' if r.id == selected_id }} st-{{ r.status }}" data-id="{{ r.id }}" data-status="{{ r.status }}">
+<a class="rowbtn cols-inq st-{{ r.status }}" href="{{ url_for('inquiries.detail_view', inquiry_id=r.id) }}" target="_blank" data-id="{{ r.id }}" data-status="{{ r.status }}">
   <span><span class="pill {{ r.status }}">{{ STATUS_LABELS[r.status] }}</span></span>
   <span class="mono">{{ r.received_at|kdate }}</span>
   <span class="site"><i class="dot" style="background:{{ r.site.color }}"></i><span class="ellipsis">{{ r.site.name }}</span></span>
@@ -8,4 +8,4 @@
   </span>
   <span class="mono">{{ r.phone|phone }}</span>
   <span class="{{ 'unassigned' if not r.assignee }}">{{ r.assignee.name if r.assignee else '미배정' }}</span>
-</button>
+</a>

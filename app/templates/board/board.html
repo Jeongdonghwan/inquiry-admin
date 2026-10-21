@@ -37,8 +37,4 @@
   </section>
   {% endfor %}
 </div>
-<aside id="drawer" class="drawer {{ 'open' if selected }}" aria-label="문의 상세">
-  <button class="drawer-close" type="button" aria-label="닫기">×</button>
-  <div class="drawer-body">{% if drawer_html %}{{ drawer_html|safe }}{% endif %}</div>
-</aside>
 {% endblock %}

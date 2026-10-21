@@ -38,9 +38,8 @@ def _panel_ctx(inq: Inquiry) -> dict:
     }
 
 
-def _render_panel(inq: Inquiry, layout: str | None = None) -> str:
-    tpl = "inquiries/_drawer.html" if layout == "drawer" else "inquiries/_detail.html"
-    return render_template(tpl, **_panel_ctx(inq))
+def _render_panel(inq: Inquiry) -> str:
+    return render_template("inquiries/_detail.html", **_panel_ctx(inq))
 
 
 def _render_row(inq: Inquiry, selected_id: int | None) -> str:
@@ -48,13 +47,7 @@ def _render_row(inq: Inquiry, selected_id: int | None) -> str:
 
 
 def _action_response(inq: Inquiry):
-    layout = request.args.get("layout")
-    html = {"ok": True, "panel_html": _render_panel(inq, layout)}
-    if layout == "drawer":
-        html["card_html"] = render_template("board/_card.html", it=inq)
-    else:
-        html["row_html"] = _render_row(inq, inq.id)
-    return jsonify(html)
+    return jsonify({"ok": True, "panel_html": _render_panel(inq), "row_html": _render_row(inq, None)})
 
 
 # ---------- 목록 ----------
@@ -71,27 +64,26 @@ def list_view():
         counts[status] = n
     counts["all"] = sum(counts[s] for s in STATUSES)
 
-    selected = None
-    sel_id = request.args.get("id", type=int)
-    if sel_id:
-        selected = db.session.get(Inquiry, sel_id)
-        if selected is None or not svc.can_access(current_user, selected):
-            selected = None
-    elif rows and not request.args.get("nosel"):
-        selected = rows[0]
-    if selected:
-        svc.record_view(current_user, selected, request.remote_addr)
 
     site_name = None
     if request.args.get("site"):
         s = Site.query.filter_by(code=request.args["site"]).first()
         site_name = s.name if s else None
     return render_template("inquiries/list.html", rows=rows, total=total, page=page, per_page=PER_PAGE, counts=counts,
-                           selected=selected, panel_html=_render_panel(selected) if selected else None,
                            site_name=site_name, users=_assignable_users(current_user),
                            sites=[s for s in Site.query.filter_by(is_active=True).order_by(Site.id)
                                   if current_user.site_ids() is None or s.id in current_user.site_ids()],
                            args=request.args)
+
+
+@bp.get("/inquiries/<int:inquiry_id>")
+@login_required
+def detail_view(inquiry_id):
+    """새 탭으로 여는 전체 화면 상세: 왼쪽 상담 기록·상태·문자, 오른쪽 상담지."""
+    from ..sheet import render_sheet
+    inq = get_inquiry_or_404(current_user, inquiry_id)
+    svc.record_view(current_user, inq, request.remote_addr)
+    return render_template("inquiries/detail.html", inq=inq, panel_html=_render_panel(inq), sheet_html=render_sheet(inq))
 
 
 @bp.get("/inquiries/<int:inquiry_id>/panel")
@@ -99,7 +91,7 @@ def list_view():
 def panel(inquiry_id):
     inq = get_inquiry_or_404(current_user, inquiry_id)
     svc.record_view(current_user, inq, request.remote_addr)
-    return _render_panel(inq, request.args.get("layout"))
+    return _render_panel(inq)
 
 
 # ---------- 액션 ----------
@@ -181,11 +173,11 @@ def create_manual():
         inq = svc.create_manual(current_user, site, request.form.to_dict())
     except (svc.ServiceError, IntakeError) as e:
         return render_template("inquiries/list.html", rows=[], total=0, page=1, per_page=PER_PAGE,
-                               counts={s: 0 for s in STATUSES} | {"all": 0}, selected=None, panel_html=None, site_name=None,
+                               counts={s: 0 for s in STATUSES} | {"all": 0}, site_name=None,
                                users=_assignable_users(current_user), sites=Site.query.filter_by(is_active=True).all(),
                                args=request.args,
                                manual_error={"name_invalid": "이름을 확인하세요", "phone_invalid": "연락처 형식이 올바르지 않습니다"}.get(str(e), str(e))), 400
-    return redirect(url_for("inquiries.list_view", id=inq.id))
+    return redirect(url_for("inquiries.detail_view", inquiry_id=inq.id))
 
 
 # ---------- 배지 ----------

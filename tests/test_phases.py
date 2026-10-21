@@ -255,10 +255,9 @@ def test_board_same_data_and_drawer(client, login):
     for name in ("박정훈", "정다은", "황보름"):
         assert name.encode() in r.data
     i = inq("정다은")
-    r = client.get(f"/inquiries/{i.id}/panel?layout=drawer")
-    assert "timeline".encode() in r.data and "정다은".encode() in r.data
-    j = client.post(f"/inquiries/{i.id}/status?layout=drawer", json={"status": "hold"}).get_json()
-    assert j["ok"] and 'data-status="hold"' in j["card_html"]
+    r = client.get(f"/inquiries/{i.id}")
+    assert r.status_code == 200 and "정다은".encode() in r.data and "sheet-inline".encode() in r.data
+    assert client.get("/dashboard").status_code == 200
 
 
 def test_user_delete_unassigns_and_blocks_self(client, login):

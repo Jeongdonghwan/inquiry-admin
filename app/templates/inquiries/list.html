@@ -37,7 +37,7 @@
   <a class="btn sm" href="{{ url_for('inquiries.list_view') }}">초기화</a>
 </form>
 
-<div class="content split {{ 'has-sel' if selected }}">
+<div class="content">
   <section class="panel list" aria-label="문의 목록">
     <div class="scroll">
       <div class="thead cols-inq"><span>상태</span><span>접수일시</span><span>유입 사이트</span><span>고객 · 문의유형</span><span>연락처</span><span>담당</span></div>
@@ -55,9 +55,6 @@
       {% endif %}
     </div>
   </section>
-  <aside class="panel detail" id="detail" aria-label="문의 상세">
-    {% if panel_html %}{{ panel_html|safe }}{% else %}<div class="empty">문의를 선택하세요.</div>{% endif %}
-  </aside>
 </div>
 
 <!-- 수동 등록 -->

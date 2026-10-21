@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}대시보드 · 상담관리{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div class="title"><h1>대시보드</h1><span class="sub">{{ current_user.display }}님, {{ today.strftime('%Y.%m.%d') }} ({{ '월화수목금토일'[today.weekday()] }}) 기준</span></div>
+  <a class="btn primary" href="{{ url_for('inquiries.list_view', status='new') }}">신규 문의 처리하기 →</a>
+</header>
+<div class="content col dash">
+  <div class="kpi-grid">
+    <a class="kpi" href="{{ url_for('inquiries.list_view', period='today') }}"><b class="mono">{{ kpi.today }}</b><span>오늘 접수</span></a>
+    <a class="kpi hot" href="{{ url_for('inquiries.list_view', status='new') }}"><b class="mono">{{ kpi.new }}</b><span>신규 (미연락)</span></a>
+    <a class="kpi" href="{{ url_for('inquiries.list_view', assignee='none') }}"><b class="mono">{{ kpi.unassigned }}</b><span>미배정</span></a>
+    <a class="kpi" href="{{ url_for('inquiries.list_view', assignee='me') }}"><b class="mono">{{ kpi.mine }}</b><span>내 담당 진행 중</span></a>
+    <a class="kpi" href="{{ url_for('inquiries.list_view') }}"><b class="mono">{{ kpi.active }}</b><span>진행 중 전체</span></a>
+    <a class="kpi" href="{{ url_for('inquiries.list_view', status='contracted') }}"><b class="mono">{{ kpi.won_week }}</b><span>최근 7일 계약</span></a>
+  </div>
+  {% if sms_failed %}<a class="flash err" href="{{ url_for('sms.list_view', status='failed') }}">문자 발송 실패 {{ sms_failed }}건 — 발송내역에서 재발송하세요</a>{% endif %}
+
+  <div class="dash-row">
+    <section class="panel pad">
+      <h3>최근 7일 접수</h3>
+      <div class="bars tall">{% for d, n in daily.items() %}<div class="bar" title="{{ d.strftime('%m.%d') }} · {{ n }}건"><em class="mono">{{ n }}</em><i style="height:{{ (n / daily_max * 100)|round }}%"></i><span>{{ d.strftime('%m.%d') }}</span></div>{% endfor %}</div>
+    </section>
+    <section class="panel pad">
+      <h3>상태 분포</h3>
+      <div class="stack">{% for s, n in status_counts.items() %}{% if n %}<i class="seg-{{ s }}" style="flex:{{ n }}" title="{{ STATUS_LABELS[s] }} {{ n }}"></i>{% endif %}{% endfor %}</div>
+      <ul class="legend">{% for s, n in status_counts.items() %}<li><a href="{{ url_for('inquiries.list_view', status=s) }}"><i class="pill {{ s }}">{{ STATUS_LABELS[s] }}</i><b class="mono">{{ n }}</b><span class="muted small">{{ (n / total * 100)|round }}%</span></a></li>{% endfor %}</ul>
+    </section>
+    <section class="panel pad">
+      <h3>사이트별 7일 접수</h3>
+      <ul class="hbars">{% for s, n in site_rows %}<li><a href="{{ url_for('inquiries.list_view', site=s.code, period='7') }}"><span class="site"><i class="dot" style="background:{{ s.color }}"></i>{{ s.name }}</span><i style="width:{{ (n / site_max * 100)|round }}%;background:{{ s.color }}"></i><b class="mono">{{ n }}</b></a></li>{% else %}<li class="muted small">연결된 사이트 없음</li>{% endfor %}</ul>
+    </section>
+  </div>
+
+  <div class="dash-row two">
+    <section class="panel table">
+      <div class="thead cols-dash-new"><span>신규 문의</span><span>접수</span><span>사이트</span><span></span></div>
+      {% for r in recent_new %}
+      <a class="trow cols-dash-new" href="{{ url_for('inquiries.detail_view', inquiry_id=r.id) }}" target="_blank">
+        <span><b>{{ r.customer_name }}</b> <span class="muted small">{{ r.inquiry_type or '' }}</span><span class="preview ellipsis small muted">{{ (r.message or '')|replace('\n',' ') }}</span></span>
+        <span class="mono">{{ r.received_at|kdate }}</span>
+        <span class="site small"><i class="dot" style="background:{{ r.site.color }}"></i>{{ r.site.name }}</span>
+        <span class="muted">→</span>
+      </a>
+      {% else %}<div class="empty">신규 문의가 없습니다.</div>{% endfor %}
+    </section>
+    <section class="panel table">
+      <div class="thead cols-dash-log"><span>최근 상담 기록</span><span>일시</span></div>
+      {% set K = {'call':'통화','call_missed':'통화','memo':'메모','status':'상태','sms':'문자'} %}
+      {% for lg in recent_logs %}
+      <a class="trow cols-dash-log" href="{{ url_for('inquiries.detail_view', inquiry_id=lg.inquiry_id) }}" target="_blank">
+        <span><span class="log-kind k-{{ lg.kind }}">{{ K[lg.kind] }}</span> <b>{{ lg.inquiry.customer_name }}</b> <span class="ellipsis small">{{ lg.body }}</span></span>
+        <span class="mono">{{ lg.created_at|kdate }}<br><span class="muted">{{ lg.user.name if lg.user else '시스템' }}</span></span>
+      </a>
+      {% else %}<div class="empty">기록이 없습니다.</div>{% endfor %}
+    </section>
+  </div>
+</div>
+{% endblock %}

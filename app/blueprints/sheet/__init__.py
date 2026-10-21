@@ -17,16 +17,19 @@ def _render(inq, form, sheet):
                            missing=svc.missing_required(form.schema_json, answers) if form else [])
 
 
+def render_sheet(inq, form_id: int | None = None) -> str:
+    sheet = svc.current_sheet(inq)
+    form = db.session.get(ConsultForm, form_id) if form_id else (sheet.form if sheet else svc.match_form(inq))
+    if form_id and sheet and sheet.form_id != form_id:
+        sheet = None
+    return _render(inq, form, sheet)
+
+
 @bp.get("/inquiries/<int:inquiry_id>/sheet")
 @login_required
 def sheet_view(inquiry_id):
     inq = get_inquiry_or_404(current_user, inquiry_id)
-    sheet = svc.current_sheet(inq)
-    fid = request.args.get("form_id", type=int)
-    form = db.session.get(ConsultForm, fid) if fid else (sheet.form if sheet else svc.match_form(inq))
-    if fid and sheet and sheet.form_id != fid:
-        sheet = None  # 다른 양식 미리보기: 기존 답변은 저장 시점에 보존 처리
-    return _render(inq, form, sheet)
+    return render_sheet(inq, request.args.get("form_id", type=int))
 
 
 @bp.post("/inquiries/<int:inquiry_id>/sheet")

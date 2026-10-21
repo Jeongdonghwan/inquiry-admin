@@ -35,13 +35,4 @@ def board_view():
     }
     sites = [s for s in Site.query.filter_by(is_active=True).order_by(Site.id)
              if current_user.site_ids() is None or s.id in current_user.site_ids()]
-    sel = None
-    if request.args.get("id", type=int):
-        sel = db.session.get(Inquiry, request.args.get("id", type=int))
-        if sel and not svc.can_access(current_user, sel):
-            sel = None
-        if sel:
-            svc.record_view(current_user, sel, request.remote_addr)
-    from ..inquiries import _render_panel
-    return render_template("board/board.html", cols=cols, summary=summary, sites=sites, args=request.args, selected=sel,
-                           drawer_html=_render_panel(sel, "drawer") if sel else None)
+    return render_template("board/board.html", cols=cols, summary=summary, sites=sites, args=request.args)

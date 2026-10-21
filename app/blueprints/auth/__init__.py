@@ -16,7 +16,7 @@ LOCK_MINUTES = 10
 def login():
     from ... import now_kst
     if current_user.is_authenticated:
-        return redirect(url_for("inquiries.list_view"))
+        return redirect(url_for("dashboard.dashboard"))
     if request.method == "POST":
         login_id = request.form.get("login_id", "").strip()
         password = request.form.get("password", "")
@@ -31,7 +31,7 @@ def login():
             db.session.commit()
             session.permanent = True
             login_user(user)
-            return redirect(request.args.get("next") or url_for("inquiries.list_view"))
+            return redirect(request.args.get("next") or url_for("dashboard.dashboard"))
         else:
             if user:
                 user.failed_logins += 1
