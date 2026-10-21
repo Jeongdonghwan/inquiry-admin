@@ -38,10 +38,9 @@ def create_app(config_object=Config) -> Flask:
     from .blueprints.settings import bp as settings_bp
     from .blueprints.sheet import bp as sheet_bp
     from .blueprints.sms import bp as sms_bp
-    from .blueprints.stats import bp as stats_bp
     from .cli import register_cli
 
-    for b in (auth_bp, inquiries_bp, sheet_bp, board_bp, export_bp, sms_bp, stats_bp, settings_bp, api_bp):
+    for b in (auth_bp, inquiries_bp, sheet_bp, board_bp, export_bp, sms_bp, settings_bp, api_bp):
         app.register_blueprint(b)
     csrf.exempt(api_bp)  # 외부 사이트 접수 API는 키 인증
     register_cli(app)

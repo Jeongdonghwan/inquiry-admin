@@ -23,7 +23,6 @@
       <a href="{{ url_for('sms.list_view') }}" class="{{ 'on' if p.startswith('/sms') }}">문자 발송내역</a>
       {% if current_user.is_admin %}<a href="{{ url_for('settings.templates') }}" class="{{ 'on' if p.startswith('/settings/templates') }}">문자 템플릿</a>
       <a href="{{ url_for('settings.forms') }}" class="{{ 'on' if p.startswith('/settings/forms') }}">상담지 양식</a>{% endif %}
-      {% if current_user.role != 'agent' %}<a href="{{ url_for('stats.stats_view') }}" class="{{ 'on' if p.startswith('/stats') }}">통계 · 유입분석</a>{% endif %}
       {% if current_user.is_admin %}<a href="{{ url_for('settings.sites') }}" class="{{ 'on' if p.startswith('/settings/sites') }}">사이트 · 폼 연동</a>
       <a href="{{ url_for('settings.users') }}" class="{{ 'on' if p.startswith('/settings/users') }}">직원 · 권한</a>{% endif %}
     </div>

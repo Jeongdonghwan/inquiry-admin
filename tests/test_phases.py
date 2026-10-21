@@ -7,7 +7,7 @@ from app import now_kst
 from app.extensions import db
 from app.models import ConsultForm, ConsultSheet, Inquiry, InquiryLog, Site, SmsMessage, User
 from app.services import inquiry as svc
-from app.services import privacy, sheet as sheet_svc, stats as stats_svc
+from app.services import privacy, sheet as sheet_svc
 from app.services.sms import queue as q
 from app.services.template import msg_type, render, unresolved
 
@@ -228,11 +228,6 @@ def test_export_requires_admin_and_logs(client, login):
     assert r.status_code == 200 and r.data[:2] == b"PK"
     assert AccessLog.query.filter_by(action="export_excel").count() == 1
 
-
-def test_stats_build(app):
-    d = stats_svc.build(u("admin"), "30")
-    assert d["total"] == 12 and d["contracted"] == 2 and len(d["sites"]) == 6
-    assert d["median_response"] is not None and d["keywords"][0][1] >= 1
 
 
 def test_users_admin_crud(client, login):
