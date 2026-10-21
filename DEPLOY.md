@@ -28,7 +28,6 @@ After=network.target mariadb.service
 
 [Service]
 WorkingDirectory=/var/www/inquiry-admin
-EnvironmentFile=/var/www/inquiry-admin/.env
 Environment=FLASK_APP=wsgi.py
 ExecStart=/var/www/inquiry-admin/venv/bin/gunicorn -w 2 --threads 2 -b 127.0.0.1:8047 wsgi:app
 Restart=always
@@ -44,7 +43,7 @@ systemctl daemon-reload
 
 ```bash
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS inquiry_admin CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE USER IF NOT EXISTS 'inquiry_admin'@'localhost'; ALTER USER 'inquiry_admin'@'localhost' IDENTIFIED BY '1234'; GRANT ALL PRIVILEGES ON inquiry_admin.* TO 'inquiry_admin'@'localhost'; FLUSH PRIVILEGES;"
-cd /var/www/inquiry-admin && set -a && . ./.env && set +a && FLASK_APP=wsgi.py ./venv/bin/flask db upgrade
+cd /var/www/inquiry-admin && FLASK_APP=wsgi.py ./venv/bin/flask db upgrade
 FLASK_APP=wsgi.py ./venv/bin/flask create-admin admin 'CHANGE-ME-NOW' --name 관리자
 ```
 
@@ -64,8 +63,8 @@ ln -sf /etc/nginx/sites-available/inquiry-admin-tmp /etc/nginx/sites-enabled/ &&
 ufw status | head -1   # active 면: ufw allow 8147/tcp
 
 ( crontab -l 2>/dev/null; cat <<'EOF'
-* * * * *  cd /var/www/inquiry-admin && set -a && . ./.env && set +a && FLASK_APP=wsgi.py ./venv/bin/flask sms-worker >> /var/log/inquiry-sms.log 2>&1
-0 4 * * *  cd /var/www/inquiry-admin && set -a && . ./.env && set +a && FLASK_APP=wsgi.py ./venv/bin/flask privacy-sweep >> /var/log/inquiry-privacy.log 2>&1
+* * * * *  cd /var/www/inquiry-admin && FLASK_APP=wsgi.py ./venv/bin/flask sms-worker >> /var/log/inquiry-sms.log 2>&1
+0 4 * * *  cd /var/www/inquiry-admin && FLASK_APP=wsgi.py ./venv/bin/flask privacy-sweep >> /var/log/inquiry-privacy.log 2>&1
 30 4 * * * mysqldump -u inquiry_admin -p1234 inquiry_admin | gzip > /var/backups/inquiry_admin_$(date +\%Y\%m\%d).sql.gz && find /var/backups -name 'inquiry_admin_*.gz' -mtime +14 -delete
 EOF
 ) | crontab -
@@ -104,7 +103,7 @@ ufw delete allow 8147/tcp 2>/dev/null
 ## 업데이트
 
 ```bash
-cd /var/www/inquiry-admin && git pull && ./venv/bin/pip install -r requirements.txt -q && set -a && . ./.env && set +a && FLASK_APP=wsgi.py ./venv/bin/flask db upgrade && systemctl restart inquiry-admin && systemctl status inquiry-admin --no-pager
+cd /var/www/inquiry-admin && git pull && ./venv/bin/pip install -r requirements.txt -q && FLASK_APP=wsgi.py ./venv/bin/flask db upgrade && systemctl restart inquiry-admin && systemctl status inquiry-admin --no-pager
 ```
 
 ## 문자(알리고) 켜기
