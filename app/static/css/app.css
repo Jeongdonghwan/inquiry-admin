@@ -21,6 +21,7 @@ button{cursor:pointer}
 .btn.primary{border:0;background:var(--primary);color:#fff;font-weight:600}
 .btn.primary:hover{background:var(--primary-dark)}
 .btn.sm{height:30px;padding:0 10px;font-size:12px}
+.btn.danger{color:#c62828;border-color:#e8a0a0}.btn.danger:hover{background:#fde6e6}
 .btn.pulse{box-shadow:0 0 0 3px #c7d4f7;border-color:var(--primary)}
 .pill{display:inline-block;font-size:12px;font-weight:600;padding:3px 8px;border-radius:3px;white-space:nowrap}
 .pill.new{background:#fde6d6;color:#9a3400}.pill.contacting{background:#e1e9fc;color:#1a43ad}.pill.consulted{background:#d9efe8;color:#0b5a4c}
@@ -247,7 +248,7 @@ dialog.modal::backdrop{background:rgba(27,31,39,.45)}
 .cols-sms{grid-template-columns:64px 92px 140px 120px minmax(0,1fr) 80px 50px 160px}
 .cols-tpl{grid-template-columns:76px 130px 110px minmax(0,1fr) 90px 70px 130px}
 .cols-forms{grid-template-columns:minmax(140px,1fr) 80px minmax(0,1.4fr) 50px 70px 50px 50px 200px}
-.cols-users{grid-template-columns:90px 140px 70px minmax(0,1fr) 100px 90px 280px}
+.cols-users{grid-template-columns:90px 140px 70px minmax(0,1fr) 100px 90px 340px}
 .cols-access{grid-template-columns:160px 120px 110px 80px minmax(0,1fr) 110px}
 .pre{white-space:pre-wrap}
 .sel{height:40px;border:1px solid #cfd4dc;border-radius:var(--radius);padding:0 8px;background:#fff;font-size:13px}

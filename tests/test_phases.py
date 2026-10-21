@@ -264,3 +264,17 @@ def test_board_same_data_and_drawer(client, login):
     assert "timeline".encode() in r.data and "정다은".encode() in r.data
     j = client.post(f"/inquiries/{i.id}/status?layout=drawer", json={"status": "hold"}).get_json()
     assert j["ok"] and 'data-status="hold"' in j["card_html"]
+
+
+def test_user_delete_unassigns_and_blocks_self(client, login):
+    login("admin")
+    kang = User.query.filter_by(login_id="kang").one()
+    n = Inquiry.query.filter_by(assignee_id=kang.id).count()
+    assert n > 0
+    r = client.post(f"/settings/users/{kang.id}/delete", follow_redirects=True)
+    assert "삭제됨".encode() in r.data and User.query.filter_by(login_id="kang").first() is None
+    assert Inquiry.query.filter_by(assignee_id=kang.id).count() == 0
+    assert InquiryLog.query.filter_by(user_id=kang.id).count() == 0
+    me = User.query.filter_by(login_id="admin").one()
+    r = client.post(f"/settings/users/{me.id}/delete", follow_redirects=True)
+    assert "본인 계정".encode() in r.data and User.query.filter_by(login_id="admin").first()

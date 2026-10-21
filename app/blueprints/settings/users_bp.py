@@ -6,7 +6,7 @@ from flask import abort, flash, redirect, render_template, request, session, url
 from flask_login import current_user
 
 from ...extensions import db
-from ...models import ROLES, AccessLog, Inquiry, Site, User
+from ...models import ROLES, AccessLog, ConsultForm, ConsultSheet, Inquiry, InquiryLog, Site, SmsMessage, User
 from ...permissions import role_required
 from . import bp
 
@@ -86,6 +86,28 @@ def user_toggle(uid):
     else:
         u.is_active_flag = not u.is_active_flag
         db.session.commit()
+    return redirect(url_for("settings.users"))
+
+
+@bp.post("/users/<int:uid>/delete")
+@role_required("admin")
+def user_delete(uid):
+    """직원 삭제. 배정 건은 미배정으로, 기록·문자·상담지의 작성자는 비워 두고(시스템 표시), 조회 이력은 함께 삭제."""
+    u = db.session.get(User, uid) or abort(404)
+    if u.id == current_user.id:
+        flash("본인 계정은 삭제할 수 없습니다")
+        return redirect(url_for("settings.users"))
+    Inquiry.query.filter_by(assignee_id=uid).update({"assignee_id": None})
+    InquiryLog.query.filter_by(user_id=uid).update({"user_id": None})
+    SmsMessage.query.filter_by(user_id=uid).update({"user_id": None})
+    ConsultSheet.query.filter_by(created_by=uid).update({"created_by": None})
+    ConsultSheet.query.filter_by(updated_by=uid).update({"updated_by": None})
+    ConsultForm.query.filter_by(updated_by=uid).update({"updated_by": None})
+    AccessLog.query.filter_by(user_id=uid).delete()
+    name = u.display
+    db.session.delete(u)
+    db.session.commit()
+    flash(f"삭제됨: {name}")
     return redirect(url_for("settings.users"))
 
 

@@ -23,6 +23,7 @@
         <a class="btn sm" href="{{ url_for('settings.user_form', uid=u.id) }}">수정</a>
         <form method="post" action="{{ url_for('settings.user_reset_pw', uid=u.id) }}" onsubmit="return confirm('비밀번호를 초기화할까요?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn sm">비밀번호 초기화</button></form>
         {% if u.id != current_user.id %}<form method="post" action="{{ url_for('settings.user_toggle', uid=u.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn sm">{{ '비활성화' if u.is_active else '활성화' }}</button></form>{% endif %}
+        {% if u.id != current_user.id %}<form method="post" action="{{ url_for('settings.user_delete', uid=u.id) }}" onsubmit="return confirm('{{ u.display }} 계정을 삭제할까요? 배정된 문의는 미배정으로 바뀌고 되돌릴 수 없습니다.')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn sm danger">삭제</button></form>{% endif %}
       </span>
     </div>
     {% endfor %}
