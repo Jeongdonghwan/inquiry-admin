@@ -18,11 +18,11 @@
 
   <div class="dp-grid three">
     <label>담당<select data-assign><option value="">미배정</option>{% for u in users %}<option value="{{ u.id }}" {{ 'selected' if inq.assignee_id == u.id }}>{{ u.display }}</option>{% endfor %}</select></label>
-    <label>콜백<span class="cb-row"><input type="datetime-local" data-callback value="{{ inq.callback_at.strftime('%Y-%m-%dT%H:%M') if inq.callback_at }}"><button type="button" class="btn sm" data-callback-clear>×</button></span></label>
     <div><span class="k">지역</span>{{ inq.region or '—' }}</div>
     <div><span class="k">접수</span><span class="mono">{{ inq.received_at|kdate }}</span></div>
     <div><span class="k">기기</span>{{ {'mobile':'모바일','pc':'PC','tablet':'태블릿'}.get(inq.device, '—') }}</div>
-    <div><span class="k">유입 키워드</span>{{ inq.utm_term or '—' }}</div>
+    {% if inq.utm_term %}<div><span class="k">유입 키워드</span>{{ inq.utm_term }}</div>{% endif %}
+    <div><button type="button" class="btn sm" data-sheet-open="{{ url_for('sheet.sheet_view', inquiry_id=inq.id) }}" data-sheet-title="{{ inq.customer_name }} · {{ inq.inquiry_type or '' }}">상담지 ↗{% if sheet_incomplete %} <i class="req-dot"></i>{% endif %}</button></div>
   </div>
   <blockquote class="quote">“{{ inq.message or '(내용 없음)' }}”</blockquote>
 
@@ -48,5 +48,4 @@
       <div class="sent-note" hidden>발송 완료 · 상담 기록에 저장되었습니다.</div>
     </div>
   </div>
-  <div class="tabpane" data-pane="sheet" hidden></div><div class="dp-tabs" hidden><button data-tab="sheet"></button></div>
 </div>

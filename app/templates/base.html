@@ -38,6 +38,10 @@
   </nav>
   <main class="main">{% block content %}{% endblock %}</main>
 </div>
+<dialog id="sheet-modal" class="modal sheet-modal">
+  <div class="sheet-modal-head"><h3>상담지 <span class="muted small" data-sheet-modal-title></span></h3><button type="button" class="btn sm" data-sheet-modal-close>닫기</button></div>
+  <div class="sheet-modal-body"><div class="muted small">불러오는 중…</div></div>
+</dialog>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

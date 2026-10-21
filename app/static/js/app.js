@@ -95,9 +95,9 @@ const App = (() => {
     $$('[data-tab]', dp).forEach(b => b.onclick = () => {
       $$('.dp-tabs [data-tab]', dp).forEach(x => x.classList.toggle('on', x.dataset.tab === b.dataset.tab));
       $$('[data-pane]', dp).forEach(p => p.hidden = p.dataset.pane !== b.dataset.tab);
-      const pane = $(`[data-pane="${b.dataset.tab}"]`, dp);
-      if (b.dataset.tab === 'sheet' && pane?.dataset.src && !pane.dataset.loaded) loadSheet(pane, pane.dataset.src);
     });
+    // 상담지는 넓은 모달에서 작성
+    $$('[data-sheet-open]', dp).forEach(b => b.onclick = () => openSheetModal(b.dataset.sheetOpen, b.dataset.sheetTitle, b));
     $$('[data-ctab]', dp).forEach(b => b.onclick = () => { $$('[data-ctab]', dp).forEach(x => x.classList.toggle('on', x === b)); $$('[data-cpane]', dp).forEach(p => p.hidden = p.dataset.cpane !== b.dataset.ctab); });
     // 상태
     const closeBox = $('.close-reason', dp);
@@ -133,8 +133,17 @@ const App = (() => {
     }
   }
 
-  // ---------- 상담지 ----------
-  async function loadSheet(pane, url) { const r = await fetch(url); pane.innerHTML = await r.text(); pane.dataset.loaded = '1'; bindSheet(pane); }
+  // ---------- 상담지 (모달) ----------
+  const sheetModal = $('#sheet-modal');
+  let sheetOpener = null;
+  async function openSheetModal(url, title, opener) {
+    sheetOpener = opener; $('[data-sheet-modal-title]', sheetModal).textContent = title || '';
+    const body = $('.sheet-modal-body', sheetModal); body.innerHTML = '<div class="muted small">불러오는 중…</div>';
+    sheetModal.showModal(); await loadSheet(body, url);
+  }
+  $('[data-sheet-modal-close]', sheetModal)?.addEventListener('click', () => sheetModal.close());
+  sheetModal?.addEventListener('click', e => { if (e.target === sheetModal) sheetModal.close(); });
+  async function loadSheet(pane, url) { const r = await fetch(url); pane.innerHTML = await r.text(); pane.dataset.src = url; bindSheet(pane); }
   function collect(form) {
     const a = {};
     $$('.sf', form).forEach(sf => {
@@ -151,7 +160,7 @@ const App = (() => {
   }
   function bindSheet(pane) {
     const box = $('.sheet', pane), form = $('[data-sheet-form-body]', pane), state = $('[data-save-state]', pane);
-    $('[data-sheet-form]', pane)?.addEventListener('change', e => { const u = new URL(pane.dataset.src, location); if (e.target.value) u.searchParams.set('form_id', e.target.value); loadSheet(pane, u); });
+    $('[data-sheet-form]', pane)?.addEventListener('change', e => { const u = new URL(pane.dataset.src, location); u.searchParams.delete('form_id'); if (e.target.value) u.searchParams.set('form_id', e.target.value); loadSheet(pane, u); });
     if (!form) return;
     const save = async () => {
       state.textContent = '저장 중…';
@@ -159,8 +168,8 @@ const App = (() => {
         const j = await post(box.dataset.save, { form_id: box.dataset.formId, answers: collect(form) });
         state.textContent = '저장됨 ' + j.saved_at;
         $$('.sf.req', form).forEach(sf => sf.classList.toggle('missing', j.missing.includes($('.sf-label', sf).textContent.replace('*', ''))));
-        const tab = $('.dp-tabs [data-tab="sheet"]'), dot = tab && $('.req-dot', tab);
-        if (tab) { if (!j.required_done && !dot) tab.insertAdjacentHTML('beforeend', ' <i class="req-dot"></i>'); else if (j.required_done && dot) dot.remove(); }
+        const dot = sheetOpener && $('.req-dot', sheetOpener);
+        if (sheetOpener) { if (!j.required_done && !dot) sheetOpener.insertAdjacentHTML('beforeend', ' <i class="req-dot"></i>'); else if (j.required_done && dot) dot.remove(); }
       } catch (e) { state.textContent = '저장 실패 — 다시 시도'; }
     };
     const schedule = debounce(save, 800);
@@ -170,6 +179,7 @@ const App = (() => {
     $$('.num input', form).forEach(i => i.addEventListener('blur', () => { const n = Number(i.value.replace(/,/g, '')); if (i.value && !isNaN(n)) i.value = n.toLocaleString(); }));
     $('[data-sheet-copy]', pane)?.addEventListener('click', async () => { const r = await fetch(box.dataset.txt); await navigator.clipboard.writeText(await r.text()); toast('상담지 요약을 복사했습니다'); });
     $('[data-sheet-print]', pane)?.addEventListener('click', () => { document.body.classList.add('print-sheet'); window.print(); setTimeout(() => document.body.classList.remove('print-sheet'), 500); });
+    $('[data-sheet-close]', pane)?.addEventListener('click', () => sheetModal.close());
   }
 
   // ---------- 문자 템플릿 편집: 미리보기 ----------

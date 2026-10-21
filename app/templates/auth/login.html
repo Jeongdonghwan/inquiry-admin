@@ -5,17 +5,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:,">
 <title>로그인 · 상담관리</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
 </head>
 <body class="login-body">
-<form method="post" class="login-box">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <div class="brand"><span class="brand-name">상담관리</span><span class="brand-co">{{ config.COMPANY_NAME }}</span></div>
-  {% with msgs = get_flashed_messages() %}{% if msgs %}<p class="error">{{ msgs[0] }}</p>{% endif %}{% endwith %}
-  <label>아이디<input name="login_id" required autofocus autocomplete="username"></label>
-  <label>비밀번호<input name="password" type="password" required autocomplete="current-password"></label>
-  <button type="submit" class="btn primary">로그인</button>
-</form>
+<div class="login-shell">
+  <aside class="login-side">
+    <div class="brand"><span class="brand-name">상담관리</span><span class="brand-co">{{ config.COMPANY_NAME }}</span></div>
+    <h1>홈페이지로 들어온 문의를<br>한 곳에서 처리합니다</h1>
+    <ul class="login-points">
+      <li><b>통합 문의함</b><span>여러 사이트의 상담 신청이 한 목록으로</span></li>
+      <li><b>상담 기록 · 상담지</b><span>통화·메모·사건 유형별 양식을 시간순으로</span></li>
+      <li><b>문자 발송</b><span>접수 확인 자동 문자와 템플릿 발송</span></li>
+    </ul>
+    <div class="login-foot mono">{{ today.strftime('%Y.%m.%d') }}</div>
+  </aside>
+  <form method="post" class="login-box" autocomplete="on">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <h2>로그인</h2>
+    <p class="muted small">발급받은 직원 계정으로 로그인하세요.</p>
+    {% with msgs = get_flashed_messages() %}{% if msgs %}<p class="error">{{ msgs[0] }}</p>{% endif %}{% endwith %}
+    <label>아이디<input name="login_id" required autofocus autocomplete="username" placeholder="아이디"></label>
+    <label>비밀번호<input name="password" type="password" required autocomplete="current-password" placeholder="비밀번호"></label>
+    <button type="submit" class="btn primary">로그인</button>
+    <p class="muted small">5회 이상 틀리면 10분간 잠깁니다. 비밀번호를 잊으면 관리자에게 초기화를 요청하세요.</p>
+  </form>
+</div>
 </body>
 </html>

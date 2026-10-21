@@ -39,13 +39,9 @@
         {% for u in users %}<option value="{{ u.id }}" {{ 'selected' if inq.assignee_id == u.id }}>{{ u.display }}{% if u.id == current_user.id %} (나){% endif %}</option>{% endfor %}
       </select>
     </label>
-    <label>콜백 예약
-      <span class="cb-row"><input type="datetime-local" data-callback value="{{ inq.callback_at.strftime('%Y-%m-%dT%H:%M') if inq.callback_at }}"><button type="button" class="btn sm" data-callback-clear title="비우기">×</button></span>
-      {% if inq.callback_at %}<small class="{{ 'overdue' if inq.callback_at < today }}">{{ inq.callback_at|kcallback }}</small>{% endif %}
-    </label>
     <div><span class="k">지역</span>{{ inq.region or '—' }}</div>
     <div><span class="k">접수</span><span class="mono">{{ inq.received_at|kdate }}</span> · {{ {'mobile':'모바일','pc':'PC','tablet':'태블릿'}.get(inq.device, '—') }}</div>
-    <div><span class="k">유입 키워드</span>{{ inq.utm_term or (inq.referrer.split('/')[2] if inq.referrer and '//' in inq.referrer else '—') }}</div>
+    {% if inq.utm_term %}<div><span class="k">유입 키워드</span>{{ inq.utm_term }}</div>{% endif %}
     {% if inq.utm_source %}<div><span class="k">유입 경로</span>{{ inq.utm_source }}{% if inq.utm_medium %} / {{ inq.utm_medium }}{% endif %}</div>{% endif %}
   </div>
 
@@ -56,7 +52,7 @@
 
   <div class="dp-tabs" role="tablist">
     <button type="button" class="on" data-tab="log">상담 기록 <span class="mono">{{ logs|length }}</span></button>
-    <button type="button" data-tab="sheet">상담지{% if sheet_incomplete %} <i class="req-dot" title="필수 항목 미완료"></i>{% endif %}</button>
+    <button type="button" data-sheet-open="{{ url_for('sheet.sheet_view', inquiry_id=inq.id) }}" data-sheet-title="{{ inq.customer_name }} · {{ inq.inquiry_type or '' }}">상담지 ↗{% if sheet_incomplete %} <i class="req-dot" title="필수 항목 미완료"></i>{% endif %}</button>
     <button type="button" data-tab="sms">문자 보내기</button>
   </div>
 
@@ -72,7 +68,6 @@
     </ul>
   </div>
 
-  <div class="tabpane" data-pane="sheet" hidden data-src="{{ url_for('sheet.sheet_view', inquiry_id=inq.id) }}"><div class="muted small">불러오는 중…</div></div>
 
   <div class="tabpane" data-pane="sms" hidden>
     <div class="sms-meta"><span>받는 사람 <b>{{ inq.customer_name }}</b> · <span class="mono">{{ inq.phone|phone }}</span></span><span>발신번호 <span class="mono">{{ (inq.site.sender_number or config.SMS_DEFAULT_SENDER)|phone }}</span></span></div>

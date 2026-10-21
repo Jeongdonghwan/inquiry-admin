@@ -7,7 +7,7 @@
     <span class="sub">{{ site_name or '전체 사이트' }} · {{ sidebar_sites|length }}개 사이트 폼 연동 · {{ today.strftime('%Y.%m.%d') }} ({{ '월화수목금토일'[today.weekday()] }}) 기준</span>
   </div>
   <form method="get" class="search" role="search">
-    {% for k in ('status','site','assignee','period','cat','cb','sheet') %}{% if args.get(k) %}<input type="hidden" name="{{ k }}" value="{{ args.get(k) }}">{% endif %}{% endfor %}
+    {% for k in ('status','site','assignee','period','cat','sheet') %}{% if args.get(k) %}<input type="hidden" name="{{ k }}" value="{{ args.get(k) }}">{% endif %}{% endfor %}
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5d6575" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
     <input name="q" value="{{ args.get('q','') }}" placeholder="이름 · 연락처 · 내용 검색" aria-label="문의 검색">
   </form>
@@ -23,16 +23,15 @@
   {% for s, label in STATUS_LABELS.items() %}
   <a role="tab" class="{{ 'on' if cur == s }}" href="{{ url_for('inquiries.list_view', status=s, **qs) }}">{{ label }} <span class="mono">{{ counts[s] }}</span></a>
   {% endfor %}
-  <button type="button" class="filter-toggle" data-toggle="filters">필터 {{ '▴' if args.get('assignee') or args.get('period') or args.get('cat') or args.get('cb') or args.get('sheet') else '▾' }}</button>
+  <button type="button" class="filter-toggle" data-toggle="filters">필터 {{ '▴' if args.get('assignee') or args.get('period') or args.get('cat') or args.get('sheet') else '▾' }}</button>
 </div>
 
-<form method="get" class="filters {{ 'open' if args.get('assignee') or args.get('period') or args.get('cat') or args.get('cb') or args.get('sheet') }}" id="filters">
+<form method="get" class="filters {{ 'open' if args.get('assignee') or args.get('period') or args.get('cat') or args.get('sheet') }}" id="filters">
   {% for k in ('status','site','q') %}{% if args.get(k) %}<input type="hidden" name="{{ k }}" value="{{ args.get(k) }}">{% endif %}{% endfor %}
   <select name="assignee"><option value="">담당자 전체</option><option value="me" {{ 'selected' if args.get('assignee')=='me' }}>내 담당</option><option value="none" {{ 'selected' if args.get('assignee')=='none' }}>미배정</option>
     {% for u in users %}<option value="{{ u.id }}" {{ 'selected' if args.get('assignee')==u.id|string }}>{{ u.display }}</option>{% endfor %}</select>
   <select name="period"><option value="">기간 전체</option>{% for v,l in (('today','오늘'),('7','7일'),('30','30일')) %}<option value="{{ v }}" {{ 'selected' if args.get('period')==v }}>{{ l }}</option>{% endfor %}</select>
   <select name="cat"><option value="">업종 전체</option><option value="legal" {{ 'selected' if args.get('cat')=='legal' }}>법률</option><option value="labor" {{ 'selected' if args.get('cat')=='labor' }}>인사·노무</option></select>
-  <select name="cb"><option value="">콜백 무관</option><option value="any" {{ 'selected' if args.get('cb')=='any' }}>콜백 있음</option></select>
   <select name="sheet"><option value="">상담지 무관</option><option value="done" {{ 'selected' if args.get('sheet')=='done' }}>상담지 작성됨</option><option value="none" {{ 'selected' if args.get('sheet')=='none' }}>미작성</option></select>
   <button class="btn sm">적용</button>
   <a class="btn sm" href="{{ url_for('inquiries.list_view') }}">초기화</a>

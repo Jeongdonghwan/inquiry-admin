@@ -3,7 +3,7 @@
   <span class="mono">{{ r.received_at|kdate }}</span>
   <span class="site"><i class="dot" style="background:{{ r.site.color }}"></i><span class="ellipsis">{{ r.site.name }}</span></span>
   <span class="who">
-    <span class="line1"><b>{{ r.customer_name }}</b><span class="type">{{ r.inquiry_type or '' }}</span>{% if r.duplicate_of_id %}<em class="tag">중복</em>{% endif %}{% if r.callback_at %}<em class="tag cb">콜백 {{ r.callback_at|kdate }}</em>{% endif %}</span>
+    <span class="line1"><b>{{ r.customer_name }}</b><span class="type">{{ r.inquiry_type or '' }}</span>{% if r.duplicate_of_id %}<em class="tag">중복</em>{% endif %}</span>
     <span class="preview ellipsis">{{ (r.message or '')|replace('\n', ' ') }}</span>
   </span>
   <span class="mono">{{ r.phone|phone }}</span>
