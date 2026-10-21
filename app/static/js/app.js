@@ -41,7 +41,7 @@ const App = (() => {
   const detail = $('#detail'), rowsEl = $('#rows'), drawer = $('#drawer');
   const isDrawer = !!drawer;
   const idOf = el => el?.dataset.id;
-  const viewQS = () => { const q = new URLSearchParams(); if (isDrawer) q.set('layout', 'drawer'); const cb = new URLSearchParams(location.search).get('cb'); if (cb) q.set('cb', cb); const s = q.toString(); return s ? '?' + s : ''; };
+  const viewQS = () => isDrawer ? '?layout=drawer' : '';
   const target = () => isDrawer ? $('.drawer-body', drawer) : detail;
 
   async function openPanel(id, push = true) {

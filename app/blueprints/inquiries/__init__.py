@@ -44,7 +44,7 @@ def _render_panel(inq: Inquiry, layout: str | None = None) -> str:
 
 
 def _render_row(inq: Inquiry, selected_id: int | None) -> str:
-    return render_template("inquiries/_row.html", r=inq, selected_id=selected_id, cb_view=request.args.get("cb") == "today")
+    return render_template("inquiries/_row.html", r=inq, selected_id=selected_id)
 
 
 def _action_response(inq: Inquiry):
@@ -62,10 +62,7 @@ def _action_response(inq: Inquiry):
 @login_required
 def list_view():
     base, q = svc.apply_filters(svc.scoped_query(current_user), current_user, request.args)
-    if request.args.get("cb") == "today":
-        q = q.order_by(Inquiry.callback_at.asc())
-    else:
-        q = q.order_by(Inquiry.received_at.desc())
+    q = q.order_by(Inquiry.received_at.desc())
     page = max(1, request.args.get("page", 1, type=int))
     total = q.count()
     rows = q.offset((page - 1) * PER_PAGE).limit(PER_PAGE).all()
@@ -94,7 +91,7 @@ def list_view():
                            site_name=site_name, users=_assignable_users(current_user),
                            sites=[s for s in Site.query.filter_by(is_active=True).order_by(Site.id)
                                   if current_user.site_ids() is None or s.id in current_user.site_ids()],
-                           args=request.args, is_callback_view=request.args.get("cb") == "today")
+                           args=request.args)
 
 
 @bp.get("/inquiries/<int:inquiry_id>/panel")
@@ -186,7 +183,7 @@ def create_manual():
         return render_template("inquiries/list.html", rows=[], total=0, page=1, per_page=PER_PAGE,
                                counts={s: 0 for s in STATUSES} | {"all": 0}, selected=None, panel_html=None, site_name=None,
                                users=_assignable_users(current_user), sites=Site.query.filter_by(is_active=True).all(),
-                               args=request.args, is_callback_view=False,
+                               args=request.args,
                                manual_error={"name_invalid": "이름을 확인하세요", "phone_invalid": "연락처 형식이 올바르지 않습니다"}.get(str(e), str(e))), 400
     return redirect(url_for("inquiries.list_view", id=inq.id))
 

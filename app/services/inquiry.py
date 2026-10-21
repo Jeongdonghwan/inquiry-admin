@@ -175,11 +175,7 @@ def apply_filters(q, user: User, args) -> tuple:
                 q = q.filter(Inquiry.received_at < datetime.fromisoformat(args["to"]) + timedelta(days=1))
         except ValueError:
             pass  # 잘못된 날짜는 기간 필터 무시
-    cb = args.get("cb")
-    if cb == "today":
-        q = q.filter(Inquiry.callback_at >= datetime.combine(today, datetime.min.time()),
-                     Inquiry.callback_at < datetime.combine(today + timedelta(days=1), datetime.min.time()))
-    elif cb == "any":
+    if args.get("cb") == "any":
         q = q.filter(Inquiry.callback_at.isnot(None))
     sheet = args.get("sheet")
     if sheet in ("done", "none"):
@@ -197,8 +193,6 @@ def badge_counts(user: User) -> dict:
     q = scoped_query(user)
     return {
         "new": q.filter(Inquiry.status == "new").count(),
-        "today_callback": q.filter(Inquiry.callback_at >= datetime.combine(today, datetime.min.time()),
-                                   Inquiry.callback_at < datetime.combine(today + timedelta(days=1), datetime.min.time())).count(),
         "mine": q.filter(Inquiry.assignee_id == user.id, Inquiry.status.notin_(["closed", "contracted"])).count(),
     }
 

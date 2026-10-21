@@ -91,7 +91,7 @@ def test_action_returns_fragments_and_badge(client, login):
     j = r.get_json()
     assert j["ok"] and "상담완료" in j["panel_html"] and 'data-status="consulted"' in j["row_html"]
     b = client.get("/api/badge").get_json()
-    assert set(b) == {"new", "today_callback", "mine"}
+    assert set(b) == {"new", "mine"}
 
 
 def test_view_detail_access_log_dedup(client, login):
