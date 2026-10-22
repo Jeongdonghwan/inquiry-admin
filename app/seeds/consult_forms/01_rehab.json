@@ -4,34 +4,52 @@
   "inquiry_type_keys": ["개인회생", "개인파산", "회생", "파산"],
   "schema": {
     "sections": [
-      {"title": "상담 정보", "fields": [
-        {"key": "ad_media", "label": "광고매체", "type": "radio", "options": ["뉴스", "홈페이지", "블로그", "카페", "애드릭스", "소개", "기타", "SMS"]},
-        {"key": "summary", "label": "상담요약", "type": "text"}
+      {"title": "가족 관계", "fields": [
+        {"key": "married", "label": "혼인유무", "type": "radio", "options": ["미혼", "기혼", "이혼", "사별"]},
+        {"key": "minor_children", "label": "미성년 자녀", "type": "number", "unit": "명"},
+        {"key": "adult_children", "label": "성인 자녀", "type": "number", "unit": "명"}
       ]},
-      {"title": "인적사항", "fields": [
-        {"key": "case_kind", "label": "사건종류", "type": "select", "options": ["개인회생", "개인파산", "신복위 워크아웃", "판단 보류"], "required": true},
-        {"key": "age", "label": "나이", "type": "number", "unit": "세"},
-        {"key": "total_debt", "label": "채무액", "type": "number", "unit": "만원", "required": true},
-        {"key": "address", "label": "주소", "type": "text"}
+      {"title": "거주 및 재산", "fields": [
+        {"key": "own_realestate", "label": "부동산 소유", "type": "bool"},
+        {"key": "housing", "label": "거주형태", "type": "radio", "options": ["자가", "전세", "월세", "무상거주"]},
+        {"key": "housing_owner", "label": "거주지 명의", "type": "text"},
+        {"key": "housing_deposit", "label": "보증금", "type": "number", "unit": "만원"},
+        {"key": "mortgage", "label": "부동산 담보대출", "type": "number", "unit": "만원"},
+        {"key": "jeonse_loan", "label": "전세자금대출", "type": "number", "unit": "만원"},
+        {"key": "spouse_assets", "label": "배우자 재산", "type": "text"},
+        {"key": "has_car", "label": "차량 소유", "type": "bool"},
+        {"key": "car_model", "label": "차량 종류 및 연식", "type": "text", "show_if": {"key": "has_car", "eq": true}},
+        {"key": "car_loan", "label": "차량 담보대출", "type": "number", "unit": "만원", "show_if": {"key": "has_car", "eq": true}},
+        {"key": "car_value", "label": "차량 시세", "type": "number", "unit": "만원", "show_if": {"key": "has_car", "eq": true}},
+        {"key": "other_assets", "label": "기타 재산", "type": "textarea"}
       ]},
-      {"title": "수임내용", "fields": [
-        {"key": "fee", "label": "수임료", "type": "number", "unit": "만원"},
-        {"key": "pay_method", "label": "방법", "type": "select", "options": ["일시납", "분납", "카드", "계좌이체", "현금"]},
-        {"key": "deposit", "label": "계약금", "type": "number", "unit": "만원"},
-        {"key": "debt_cert", "label": "부채증명 발급", "type": "radio", "options": ["미발급", "발급 중", "완료"]},
-        {"key": "service_fee", "label": "송달료", "type": "number", "unit": "원"}
+      {"title": "직업 및 소득", "fields": [
+        {"key": "job", "label": "직업", "type": "text"},
+        {"key": "monthly_income", "label": "월 급여(실수령)", "type": "number", "unit": "만원", "required": true},
+        {"key": "tenure", "label": "재직기간", "type": "text"},
+        {"key": "spouse_job", "label": "배우자 직업 및 소득", "type": "text"}
       ]},
-      {"title": "채무내역", "fields": [
-        {"key": "creditor_count", "label": "채권자수", "type": "number", "unit": "곳"},
-        {"key": "overdue_since", "label": "연체시기", "type": "text", "help": "예: 2025년 3월부터"},
-        {"key": "has_lawsuit", "label": "소송·압류·경매 진행", "type": "bool"},
-        {"key": "lawsuit_detail", "label": "진행 내용", "type": "text", "show_if": {"key": "has_lawsuit", "eq": true}},
-        {"key": "debt_detail", "label": "내용", "type": "textarea", "help": "채권자별 금액, 카드·대출 종류 등"}
+      {"title": "채무현황", "fields": [
+        {"key": "total_debt", "label": "총 채무금액", "type": "number", "unit": "만원", "required": true},
+        {"key": "creditor_count", "label": "채권자 수", "type": "number", "unit": "곳"},
+        {"key": "loan_usage", "label": "대출 사용처", "type": "text"},
+        {"key": "recent_loans", "label": "최근 1년 이내 대출", "type": "text"},
+        {"key": "overdue", "label": "연체 여부 및 기간", "type": "text"},
+        {"key": "seizure", "label": "압류 및 법적조치 여부", "type": "text"},
+        {"key": "prior_case", "label": "과거 개인회생·파산 이력", "type": "text"},
+        {"key": "tax_arrears", "label": "세금체납", "type": "text"},
+        {"key": "guarantee_debt", "label": "보증채무", "type": "text"},
+        {"key": "personal_debt", "label": "개인채무", "type": "text"},
+        {"key": "debt_cause", "label": "채무발생원인", "type": "textarea"},
+        {"key": "gamble_debt", "label": "주식·코인·도박 관련 채무", "type": "text"},
+        {"key": "family_debt", "label": "가족 및 지인 채무", "type": "text"}
       ]},
-      {"title": "재산유무", "fields": [
-        {"key": "job_type", "label": "직장", "type": "select", "options": ["급여소득(4대보험)", "급여소득(비정규·일용)", "사업소득", "프리랜서", "무직", "기타"], "required": true},
-        {"key": "monthly_income", "label": "소득", "type": "number", "unit": "만원", "help": "월 실수령", "required": true},
-        {"key": "asset_detail", "label": "내용", "type": "textarea", "help": "주택·보증금·차량·예금·보험 등"}
+      {"title": "상담 결과", "fields": [
+        {"key": "consult_date", "label": "상담일", "type": "date"},
+        {"key": "consultant", "label": "상담 담당자", "type": "text"},
+        {"key": "intention", "label": "진행 의사", "type": "radio", "options": ["진행 희망", "검토 중", "진행 안 함"]},
+        {"key": "extra_check", "label": "추가 확인사항", "type": "textarea"},
+        {"key": "recontact_date", "label": "재연락 예정일", "type": "date"}
       ]}
     ]
   }

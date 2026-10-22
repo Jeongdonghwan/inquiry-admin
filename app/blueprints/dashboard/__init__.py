@@ -54,9 +54,11 @@ def dashboard():
     recent_logs = (InquiryLog.query.join(Inquiry).filter(Inquiry.id.in_(q.with_entities(Inquiry.id)))
                    .filter(InquiryLog.kind.in_(["call", "call_missed", "memo", "status", "sms"]))
                    .order_by(InquiryLog.created_at.desc()).limit(8).all())
+    phone_7 = q.filter(Inquiry.channel == "phone", Inquiry.received_at >= week).count()
     sms_fail = SmsMessage.query.filter(SmsMessage.status == "failed")
     if ids is not None:
         sms_fail = sms_fail.filter(SmsMessage.site_id.in_(ids or [-1]))
     return render_template("dashboard/dashboard.html", kpi=kpi, status_counts=status_counts, total=total,
                            site_rows=site_rows, site_max=site_max, daily=daily, daily_max=daily_max,
-                           recent_new=recent_new, recent_logs=recent_logs, sms_failed=sms_fail.count())
+                           recent_new=recent_new, recent_logs=recent_logs, sms_failed=sms_fail.count(),
+                           phone_7=phone_7)

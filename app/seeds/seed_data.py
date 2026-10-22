@@ -127,9 +127,9 @@ def _inquiries():
 # 상담지 답변 예시: 문의 번호(1-based) → (양식 파일 stem, answers)
 SHEETS = {
     1: ("01_rehab", {"ad_media": "홈페이지", "summary": "카드론 포함 7,800만원, 급여소득자. 회생 적합 검토", "case_kind": "개인회생", "age": 41,
-                     "total_debt": 7800, "address": "경기 수원시 영통구", "creditor_count": 5, "overdue_since": "2026년 6월부터",
-                     "has_lawsuit": True, "lawsuit_detail": "카드사 지급명령 1건", "debt_detail": "신용카드 2,100 / 카드론 3,200 / 은행 신용대출 2,500",
-                     "job_type": "급여소득(4대보험)", "monthly_income": 280, "asset_detail": "전세보증금 3,000만원, 차량 없음"}),
+                     "address": "경기 수원시 영통구", "married": "기혼", "minor_children": 2, "housing": "전세", "housing_deposit": 3000,
+                     "has_car": False, "job": "회사원", "monthly_income": 280, "tenure": "6년", "total_debt": 7800, "creditor_count": 5,
+                     "overdue": "2026년 6월부터 연체", "seizure": "카드사 지급명령 1건", "debt_cause": "생활비·자녀 교육비"}),
     5: ("05_traffic", {"side": "피해자", "accident_date": None, "fault_ratio": 0, "injury": "경상 염좌", "diagnosis_weeks": 4,
                        "treatment": "입원", "hospital_days": 14, "insurer_offer": 350, "insurer_contacted": True,
                        "docs": ["진단서", "입퇴원확인서"]}),
@@ -141,8 +141,16 @@ SHEETS = {
 
 
 def load_forms() -> list[dict]:
+    """consult_forms/*.json (_로 시작하는 파일 제외). 각 양식 앞에 _common.json 공통 섹션을 붙인다."""
     folder = Path(__file__).with_name("consult_forms")
-    return [json.loads(p.read_text(encoding="utf-8")) | {"_stem": p.stem} for p in sorted(folder.glob("*.json"))]
+    common = json.loads((folder / "_common.json").read_text(encoding="utf-8"))["sections"]
+    out = []
+    for p in sorted(folder.glob("[!_]*.json")):
+        f = json.loads(p.read_text(encoding="utf-8")) | {"_stem": p.stem}
+        if f.get("common", True):
+            f["schema"] = {"sections": json.loads(json.dumps(common)) + f["schema"]["sections"]}
+        out.append(f)
+    return out
 
 
 def _required_done(schema: dict, answers: dict) -> bool:
@@ -232,3 +240,5 @@ def run_seed(reset: bool = False) -> None:
         db.session.add(InquiryLog(inquiry_id=inq.id, kind="sheet", user_id=inq.assignee_id,
                                   body=f"상담지 작성 시작: {form.name}", created_at=inq.received_at + timedelta(minutes=25)))
     db.session.commit()
+    from ..services.merge import merge_duplicates
+    merge_duplicates()  # 같은 연락처 = 문의 1건

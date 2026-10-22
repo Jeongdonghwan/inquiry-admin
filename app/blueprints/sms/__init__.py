@@ -6,7 +6,7 @@ from flask_login import current_user, login_required
 
 from ... import now_kst
 from ...extensions import db
-from ...models import Site, SmsMessage
+from ...models import Site, SmsMessage, User
 from ...services.sms import queue as q
 
 bp = Blueprint("sms", __name__, url_prefix="/sms", template_folder="../../templates")
@@ -41,7 +41,8 @@ def list_view():
     rows = qs.order_by(SmsMessage.created_at.desc()).offset((page - 1) * PER_PAGE).limit(PER_PAGE).all()
     sites = [s for s in Site.query.filter_by(is_active=True).order_by(Site.id) if current_user.site_ids() is None or s.id in current_user.site_ids()]
     return render_template("sms/list.html", rows=rows, total=total, page=page, per_page=PER_PAGE, sites=sites, args=a,
-                           labels=STATUS_LABELS, site_map={s.id: s for s in Site.query})
+                           labels=STATUS_LABELS, site_map={s.id: s for s in Site.query},
+                           users={u.id: u for u in User.query})
 
 
 def _get(mid):

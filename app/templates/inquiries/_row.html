@@ -1,11 +1,13 @@
-<a class="rowbtn cols-inq st-{{ r.status }}" href="{{ url_for('inquiries.detail_view', inquiry_id=r.id) }}" target="_blank" data-id="{{ r.id }}" data-status="{{ r.status }}">
+<div class="rowbtn cols-inq st-{{ r.status }}" data-href="{{ url_for('inquiries.detail_view', inquiry_id=r.id) }}" data-id="{{ r.id }}" data-status="{{ r.status }}">
+  <span class="chk"><input type="checkbox" data-row-check value="{{ r.id }}" aria-label="{{ r.customer_name }} 선택"></span>
   <span><span class="pill {{ r.status }}">{{ STATUS_LABELS[r.status] }}</span></span>
-  <span class="mono">{{ r.received_at|kdate }}</span>
-  <span class="site"><i class="dot" style="background:{{ r.site.color }}"></i><span class="ellipsis">{{ r.site.name }}</span></span>
+  <span class="mono">{{ r.received_at|kdate }}{% if r.last_received_at %}<em class="re">재문의 {{ r.last_received_at|kdate }}</em>{% endif %}</span>
+  {% if r.channel == 'phone' %}<span class="site phone-in"><b>☎ 전화접수</b><span class="muted small ellipsis">{{ r.site.name }}</span></span>
+  {% else %}<span class="site"><i class="dot" style="background:{{ r.site.color }}"></i><span class="ellipsis">{{ r.site.name }}</span></span>{% endif %}
   <span class="who">
-    <span class="line1"><b>{{ r.customer_name }}</b><span class="type">{{ r.inquiry_type or '' }}</span>{% if r.duplicate_of_id %}<em class="tag">중복</em>{% endif %}</span>
+    <span class="line1"><a class="name" href="{{ url_for('inquiries.detail_view', inquiry_id=r.id) }}"><b>{{ r.customer_name }}</b></a><span class="type">{{ r.inquiry_type or '' }}</span></span>
     <span class="preview ellipsis">{{ (r.message or '')|replace('\n', ' ') }}</span>
   </span>
   <span class="mono">{{ r.phone|phone }}</span>
   <span class="{{ 'unassigned' if not r.assignee }}">{{ r.assignee.name if r.assignee else '미배정' }}</span>
-</a>
+</div>

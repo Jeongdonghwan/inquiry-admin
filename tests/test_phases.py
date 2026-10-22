@@ -62,12 +62,28 @@ def test_callback_and_records(app):
         svc.add_record(i, kang, "memo", "   ")
 
 
-def test_manual_create_marks_duplicate(app):
+def test_seed_merged_same_phone(app):
+    assert Inquiry.query.filter_by(phone="01048213307").count() == 1  # 박정훈 2건 → 1건
+
+
+def test_direct_register_phone_and_merge(app):
     yoon = u("yoon")
     hs = Site.query.filter_by(code="hs").one()
-    new = svc.create_manual(yoon, hs, {"name": "박정훈", "phone": "010-4821-3307", "inquiry_type": "개인회생", "message": "전화 문의"})
-    assert new.duplicate_of_id == inq("박정훈").id or new.duplicate_of_id is not None
-    assert new.logs[0].kind == "received" and "수동 등록" in new.logs[0].body
+    new = svc.create_manual(yoon, hs, {"name": "전화고객", "phone": "010-1212-3434", "inquiry_type": "민사", "message": "전화 문의"})
+    assert new.channel == "phone" and "전화 직접접수" in new.logs[0].body
+    same = svc.create_manual(yoon, hs, {"name": "박정훈", "phone": "010-4821-3307", "message": "또 전화"})
+    assert same.id == inq("박정훈").id and any("전화로 재문의" in l.body for l in same.logs)
+
+
+def test_update_info_and_phone2_merge(client, login, app):
+    login("admin")
+    i = inq("정다은")
+    j = client.post(f"/inquiries/{i.id}/info", json={"customer_name": "정다은", "phone": "010-2294-5518", "phone2": "010-9999-0000", "region": "서울"}).get_json()
+    assert j["ok"] and "010-9999-0000" in j["panel_html"]
+    assert any("추가 연락처" in l.body for l in i.logs)
+    assert client.post(f"/inquiries/{i.id}/info", json={"customer_name": "", "phone": "1"}).status_code == 400
+    from app.services.merge import find_existing
+    assert find_existing("01099990000").id == i.id
 
 
 def test_agent_scope_and_404(client, login):
@@ -109,8 +125,10 @@ def test_form_matching_and_show_if(app):
     f = sheet_svc.match_form(rehab)
     assert f and f.name == "개인회생·파산"
     assert sheet_svc.match_form(inq("정다은")).name.startswith("가사")
-    fld = next(x for x in sheet_svc.fields_of(f.schema_json) if x["key"] == "lawsuit_detail")
-    assert not sheet_svc.visible(fld, {"has_lawsuit": False}) and sheet_svc.visible(fld, {"has_lawsuit": True})
+    keys = [x["key"] for x in sheet_svc.fields_of(f.schema_json)]
+    assert keys[:2] == ["ad_media", "summary"] and "legal_cost" in keys  # 공통 섹션이 앞에
+    fld = next(x for x in sheet_svc.fields_of(f.schema_json) if x["key"] == "car_model")
+    assert not sheet_svc.visible(fld, {"has_car": False}) and sheet_svc.visible(fld, {"has_car": True})
 
 
 def test_schema_validation():
@@ -131,12 +149,13 @@ def test_save_answers_and_form_change_preserves(app):
     s = sheet_svc.save_answers(i, yoon, fam.id, {"kind": "협의이혼", "marriage_years": "7", "children": "1,000"})
     assert s.answers_json["marriage_years"] == 7 and s.answers_json["children"] == 1000 and s.required_done
     assert any(l.kind == "sheet" and "작성 시작" in l.body for l in i.logs)
-    s2 = sheet_svc.save_answers(i, yoon, civil.id, {"case_kind": "대여금"})
+    s2 = sheet_svc.save_answers(i, yoon, civil.id, {"civil_kind": "대여금", "legal_cost": "30000", "legal_cost_separate": True})
     db.session.refresh(s)
-    assert s.is_current is False and s2.is_current and not s2.required_done
-    assert ConsultSheet.query.filter_by(inquiry_id=i.id).count() == 2
+    assert s.is_current and s2.is_current and not s2.required_done  # 사건별로 둘 다 유지
+    assert len(sheet_svc.sheets_of(i)) == 2
+    assert any("상담지 추가: 민사" in l.body for l in i.logs)
     txt = sheet_svc.summary_text(s2)
-    assert "민사 상담지" in txt and "사건 종류: 대여금" in txt
+    assert "민사 상담지" in txt and "사건 종류: 대여금" in txt and "30,000원 (별도)" in txt
 
 
 def test_sheet_endpoints_permission(client, login):
@@ -272,3 +291,19 @@ def test_user_delete_unassigns_and_blocks_self(client, login):
     me = User.query.filter_by(login_id="admin").one()
     r = client.post(f"/settings/users/{me.id}/delete", follow_redirects=True)
     assert "본인 계정".encode() in r.data and User.query.filter_by(login_id="admin").first()
+
+
+def test_bulk_sms(client, login):
+    login("yoon")
+    ids = [inq("정다은").id, inq("조민재").id]
+    j = client.post("/inquiries/bulk-sms", json={"ids": ids, "body": "[{사이트}] {이름}님 안내드립니다."}).get_json()
+    assert j["ok"] and j["sent"] == 2
+    assert SmsMessage.query.filter(SmsMessage.body.like("%정다은님 안내%")).count() == 1
+
+
+def test_detail_same_tab_back_and_tabs(client, login):
+    login("admin")
+    i = inq("박정훈")
+    r = client.get(f"/inquiries/{i.id}", headers={"Referer": "http://localhost/inquiries?status=new"})
+    assert b"/inquiries?status=new" in r.data and b"target=\"_blank\"" not in r.data
+    assert "+ 사건 추가".encode() in r.data and "2026.".encode() in r.data

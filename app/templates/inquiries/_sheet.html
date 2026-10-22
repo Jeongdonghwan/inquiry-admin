@@ -1,16 +1,16 @@
 {% from "inquiries/_sheet_field.html" import field %}
-<div class="sheet" data-form-id="{{ form.id if form }}" data-save="{{ url_for('sheet.sheet_save', inquiry_id=inq.id) }}" data-txt="{{ url_for('sheet.sheet_txt', inquiry_id=inq.id) }}">
-  <div class="sheet-top">
-    <select data-sheet-form>
-      <option value="">양식 선택</option>
-      {% for f in forms %}<option value="{{ f.id }}" {{ 'selected' if form and form.id == f.id }}>{{ f.name }}</option>{% endfor %}
-    </select>
-    <span class="save-state muted small" data-save-state>{% if sheet %}저장됨 {{ sheet.updated_at.strftime('%H:%M') }}{% elif form %}미작성{% endif %}</span>
-    {% if form %}<span class="row"><button type="button" class="btn sm" data-sheet-copy>요약 복사</button><button type="button" class="btn sm" data-sheet-print>인쇄</button></span>{% endif %}
+<div class="sheet" data-form-id="{{ form.id if form }}" data-save="{{ url_for('sheet.sheet_save', inquiry_id=inq.id) }}" data-txt="{{ url_for('sheet.sheet_txt', inquiry_id=inq.id, form_id=form.id if form else None) }}">
+  <div class="sheet-tabs" role="tablist" aria-label="사건별 상담지">
+    {% for t in tabs %}<button type="button" class="{{ 'on' if form and t.id == form.id }}" data-sheet-tab="{{ t.id }}">{{ t.name }}{% if t.id not in saved_ids %} <em>미작성</em>{% endif %}</button>{% endfor %}
+    <select data-sheet-add aria-label="사건 추가"><option value="">+ 사건 추가</option>{% for f in add_forms %}<option value="{{ f.id }}">{{ f.name }}</option>{% endfor %}</select>
   </div>
   {% if not form %}
-    <p class="muted small">문의 유형에 맞는 양식이 없습니다. 위에서 양식을 선택하세요.</p>
+    <p class="muted small">문의 유형에 맞는 양식이 없습니다. 「+ 사건 추가」에서 양식을 선택하세요.</p>
   {% else %}
+  <div class="sheet-top">
+    <span class="save-state muted small" data-save-state>{% if sheet %}저장됨 {{ sheet.updated_at.strftime('%H:%M') }}{% else %}미작성 — 입력하면 자동 저장{% endif %}</span>
+    <span class="row"><button type="button" class="btn sm" data-sheet-copy>요약 복사</button><button type="button" class="btn sm" data-sheet-print>인쇄</button></span>
+  </div>
   <form class="sheet-form wide" data-sheet-form-body>
     {% for sec in form.schema_json.sections %}
     <fieldset class="sheet-sec">

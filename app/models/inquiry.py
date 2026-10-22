@@ -12,6 +12,9 @@ class Inquiry(db.Model):
     assignee_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"))
     customer_name = db.Column(db.String(50), nullable=False)
     phone = db.Column(db.String(20), nullable=False)  # 숫자만
+    phone2 = db.Column(db.String(20))  # 추가 연락처
+    channel = db.Column(db.String(10), nullable=False, default="web", server_default="web")  # web | phone(직접 등록)
+    last_received_at = db.Column(db.DateTime)  # 같은 연락처 재문의 시각
     region = db.Column(db.String(100))
     inquiry_type = db.Column(db.String(100))
     message = db.Column(db.Text)
@@ -45,6 +48,7 @@ class Inquiry(db.Model):
         db.Index("idx_status_received", "status", "received_at"),
         db.Index("idx_site_received", "site_id", "received_at"),
         db.Index("idx_phone", "phone"),
+        db.Index("idx_phone2", "phone2"),
         db.Index("idx_assignee", "assignee_id"),
         db.Index("idx_callback", "callback_at"),
     )

@@ -55,7 +55,7 @@ def _action_response(inq: Inquiry):
 @login_required
 def list_view():
     base, q = svc.apply_filters(svc.scoped_query(current_user), current_user, request.args)
-    q = q.order_by(Inquiry.received_at.desc())
+    q = q.order_by(db.func.coalesce(Inquiry.last_received_at, Inquiry.received_at).desc())
     page = max(1, request.args.get("page", 1, type=int))
     total = q.count()
     rows = q.offset((page - 1) * PER_PAGE).limit(PER_PAGE).all()
@@ -73,17 +73,35 @@ def list_view():
                            site_name=site_name, users=_assignable_users(current_user),
                            sites=[s for s in Site.query.filter_by(is_active=True).order_by(Site.id)
                                   if current_user.site_ids() is None or s.id in current_user.site_ids()],
-                           args=request.args)
+                           args=request.args, bulk_templates=_bulk_templates())
+
+
+def _bulk_templates():
+    ids = current_user.site_ids()
+    q = SmsTemplate.query.filter_by(is_active=True, is_auto_reply=False)
+    if ids is not None:
+        q = q.filter((SmsTemplate.site_id.is_(None)) | (SmsTemplate.site_id.in_(ids or [-1])))
+    return q.order_by(SmsTemplate.sort_order).all()
+
+
+def _back_url():
+    """목록·보드·대시보드에서 들어왔으면 그 화면(필터 포함)으로 돌아가기."""
+    from urllib.parse import urlparse
+    ref = request.referrer or ""
+    if ref.startswith(request.host_url) and urlparse(ref).path in ("/inquiries", "/board", "/dashboard"):
+        return ref
+    return url_for("inquiries.list_view")
 
 
 @bp.get("/inquiries/<int:inquiry_id>")
 @login_required
 def detail_view(inquiry_id):
-    """새 탭으로 여는 전체 화면 상세: 왼쪽 상담 기록·상태·문자, 오른쪽 상담지."""
+    """전체 화면 상세 (같은 탭): 왼쪽 상담 기록·상태·문자, 오른쪽 사건별 상담지."""
     from ..sheet import render_sheet
     inq = get_inquiry_or_404(current_user, inquiry_id)
     svc.record_view(current_user, inq, request.remote_addr)
-    return render_template("inquiries/detail.html", inq=inq, panel_html=_render_panel(inq), sheet_html=render_sheet(inq))
+    return render_template("inquiries/detail.html", inq=inq, panel_html=_render_panel(inq), sheet_html=render_sheet(inq),
+                           back_url=_back_url())
 
 
 @bp.get("/inquiries/<int:inquiry_id>/panel")
@@ -163,7 +181,47 @@ def send_sms(inquiry_id):
     return _action_response(inq)
 
 
-# ---------- 수동 등록 ----------
+@bp.post("/inquiries/<int:inquiry_id>/info")
+@login_required
+def update_info(inquiry_id):
+    inq = get_inquiry_or_404(current_user, inquiry_id)
+    try:
+        svc.update_info(inq, current_user, _json())
+    except svc.ServiceError as e:
+        return jsonify(ok=False, error=str(e)), 400
+    return _action_response(inq)
+
+
+@bp.post("/inquiries/bulk-sms")
+@login_required
+def bulk_sms():
+    """목록에서 선택한 문의들에 같은 문구(변수 치환)로 일괄 발송."""
+    from flask import current_app
+    from ...permissions import can_access
+    from ...services.sms import queue as sms_q
+    from ...services.template import render as render_tpl
+    d = _json()
+    body = (d.get("body") or "").strip()
+    ids = [int(x) for x in (d.get("ids") or []) if str(x).isdigit()][:300]
+    if not body or not ids:
+        return jsonify(ok=False, error="받을 문의와 문자 내용을 확인하세요"), 400
+    sent = failed = skipped = 0
+    phone = current_app.config["REPRESENTATIVE_PHONE"]
+    for i in ids:
+        inq = db.session.get(Inquiry, i)
+        if inq is None or not can_access(current_user, inq) or inq.is_masked:
+            skipped += 1
+            continue
+        try:
+            m = sms_q.enqueue(inq, current_user, render_tpl(body, inq, company_phone=phone))
+            sent += m.status == "sent"
+            failed += m.status != "sent"
+        except sms_q.SmsError:
+            failed += 1
+    return jsonify(ok=True, sent=sent, failed=failed, skipped=skipped)
+
+
+# ---------- 직접 등록 ----------
 @bp.post("/inquiries")
 @login_required
 def create_manual():

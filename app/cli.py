@@ -45,6 +45,12 @@ def register_cli(app: Flask) -> None:
         db.session.commit()
         click.echo(f"양식 {n}개 반영")
 
+    @app.cli.command("merge-duplicates")
+    def merge_duplicates_cmd():
+        """같은 연락처의 기존 문의들을 가장 먼저 접수된 건으로 통합 (기록·문자·상담지 이동)."""
+        from .services.merge import merge_duplicates
+        click.echo(f"통합 {merge_duplicates()}건")
+
     @app.cli.command("sms-worker")
     def sms_worker():
         """crontab 1분 주기: 대기·예약 문자 발송."""

@@ -13,7 +13,7 @@
       <span class="mono">{{ a.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
       <span>{{ users[a.user_id].display if a.user_id in users else a.user_id }}</span>
       <span>{{ labels.get(a.action, a.action) }}</span>
-      <span>{% if a.inquiry_id %}<a href="{{ url_for('inquiries.list_view', id=a.inquiry_id) }}">No.{{ a.inquiry_id }}</a>{% else %}—{% endif %}</span>
+      <span>{% if a.inquiry_id %}<a href="{{ url_for('inquiries.detail_view', inquiry_id=a.inquiry_id) }}">No.{{ a.inquiry_id }}</a>{% else %}—{% endif %}</span>
       <span class="small ellipsis" title="{{ a.detail or '' }}">{{ a.detail or '' }}</span>
       <span class="mono">{{ a.ip or '' }}</span>
     </div>

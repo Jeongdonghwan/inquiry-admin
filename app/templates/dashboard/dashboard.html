@@ -28,7 +28,8 @@
     </section>
     <section class="panel pad">
       <h3>사이트별 7일 접수</h3>
-      <ul class="hbars">{% for s, n in site_rows %}<li><a href="{{ url_for('inquiries.list_view', site=s.code, period='7') }}"><span class="site"><i class="dot" style="background:{{ s.color }}"></i>{{ s.name }}</span><i style="width:{{ (n / site_max * 100)|round }}%;background:{{ s.color }}"></i><b class="mono">{{ n }}</b></a></li>{% else %}<li class="muted small">연결된 사이트 없음</li>{% endfor %}</ul>
+      <ul class="hbars">{% for s, n in site_rows %}<li><a href="{{ url_for('inquiries.list_view', site=s.code, period='7') }}"><span class="site"><i class="dot" style="background:{{ s.color }}"></i>{{ s.name }}</span><i style="width:{{ (n / site_max * 100)|round }}%;background:{{ s.color }}"></i><b class="mono">{{ n }}</b></a></li>{% else %}<li class="muted small">연결된 사이트 없음</li>{% endfor %}
+        {% if phone_7 %}<li><a href="{{ url_for('inquiries.list_view', period='7') }}"><span class="site">☎ 전화 직접접수</span><i style="width:{{ (phone_7 / site_max * 100)|round }}%;background:#1c2230"></i><b class="mono">{{ phone_7 }}</b></a></li>{% endif %}</ul>
     </section>
   </div>
 
@@ -36,7 +37,7 @@
     <section class="panel table">
       <div class="thead cols-dash-new"><span>신규 문의</span><span>접수</span><span>사이트</span><span></span></div>
       {% for r in recent_new %}
-      <a class="trow cols-dash-new" href="{{ url_for('inquiries.detail_view', inquiry_id=r.id) }}" target="_blank">
+      <a class="trow cols-dash-new" href="{{ url_for('inquiries.detail_view', inquiry_id=r.id) }}">
         <span><b>{{ r.customer_name }}</b> <span class="muted small">{{ r.inquiry_type or '' }}</span><span class="preview ellipsis small muted">{{ (r.message or '')|replace('\n',' ') }}</span></span>
         <span class="mono">{{ r.received_at|kdate }}</span>
         <span class="site small"><i class="dot" style="background:{{ r.site.color }}"></i>{{ r.site.name }}</span>
@@ -48,7 +49,7 @@
       <div class="thead cols-dash-log"><span>최근 상담 기록</span><span>일시</span></div>
       {% set K = {'call':'통화','call_missed':'통화','memo':'메모','status':'상태','sms':'문자'} %}
       {% for lg in recent_logs %}
-      <a class="trow cols-dash-log" href="{{ url_for('inquiries.detail_view', inquiry_id=lg.inquiry_id) }}" target="_blank">
+      <a class="trow cols-dash-log" href="{{ url_for('inquiries.detail_view', inquiry_id=lg.inquiry_id) }}">
         <span><span class="log-kind k-{{ lg.kind }}">{{ K[lg.kind] }}</span> <b>{{ lg.inquiry.customer_name }}</b> <span class="ellipsis small">{{ lg.body }}</span></span>
         <span class="mono">{{ lg.created_at|kdate }}<br><span class="muted">{{ lg.user.name if lg.user else '시스템' }}</span></span>
       </a>

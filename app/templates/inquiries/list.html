@@ -13,7 +13,7 @@
   </form>
   <div class="seg"><a class="on" href="{{ url_for('inquiries.list_view') }}">목록</a><a href="{{ url_for('board.board_view') }}">보드</a></div>
   {% if current_user.is_admin %}<a class="btn" href="{{ url_for('export.export_xlsx', **args) }}">엑셀 내려받기</a>{% endif %}
-  <button class="btn primary" type="button" data-open="manual">수동 등록</button>
+  <button class="btn primary" type="button" data-open="manual">직접 등록</button>
 </header>
 
 <div class="tabs" role="tablist" aria-label="상담 상태">
@@ -37,10 +37,18 @@
   <a class="btn sm" href="{{ url_for('inquiries.list_view') }}">초기화</a>
 </form>
 
+<div class="bulkbar" id="bulkbar" hidden>
+  <b><span data-bulk-count>0</span>건 선택</b>
+  <select data-bulk-tpl><option value="">템플릿 불러오기</option>{% for t in bulk_templates %}<option value="{{ t.body }}">{{ t.name }}</option>{% endfor %}</select>
+  <textarea data-bulk-body rows="2" placeholder="선택한 문의에 보낼 문자 · {이름} {사이트} {담당자} {대표번호} 변수 사용 가능"></textarea>
+  <span class="muted small"><span data-bulk-bytes>0</span> byte</span>
+  <button type="button" class="btn sm primary" data-bulk-send>선택 건에 문자 보내기</button>
+  <button type="button" class="btn sm" data-bulk-clear>선택 해제</button>
+</div>
 <div class="content">
   <section class="panel list" aria-label="문의 목록">
     <div class="scroll">
-      <div class="thead cols-inq"><span>상태</span><span>접수일시</span><span>유입 사이트</span><span>고객 · 문의유형</span><span>연락처</span><span>담당</span></div>
+      <div class="thead cols-inq"><span class="chk"><input type="checkbox" data-check-all aria-label="이 페이지 전체 선택"></span><span>상태</span><span>접수일시</span><span>유입 사이트</span><span>고객 · 문의유형</span><span>연락처</span><span>담당</span></div>
       <div id="rows">
         {% for r in rows %}{% include "inquiries/_row.html" with context %}{% else %}
         <div class="empty">조건에 맞는 문의가 없습니다.</div>
@@ -61,13 +69,14 @@
 <dialog id="manual" class="modal">
   <form method="post" action="{{ url_for('inquiries.create_manual') }}" class="form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <h3>수동 등록 <span class="muted small">전화로 들어온 문의를 직접 입력</span></h3>
+    <h3>직접 등록 <span class="muted small">사무실로 걸려온 전화 등을 바로 입력 · 등록 후 상담지로 이동</span></h3>
     {% if manual_error %}<div class="flash err">{{ manual_error }}</div>{% endif %}
-    <label>유입 사이트<select name="site_id" required>{% for s in sites %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}</select></label>
+    <label>사무소(사이트)<select name="site_id" required>{% for s in sites %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}</select></label>
     <div class="two"><label>고객명<input name="name" required maxlength="50"></label><label>연락처<input name="phone" required placeholder="010-0000-0000"></label></div>
     <div class="two"><label>문의 유형<input name="inquiry_type" placeholder="개인회생, 부당해고 …"></label><label>지역<input name="region"></label></div>
     <label>문의 내용<textarea name="message" rows="4"></textarea></label>
-    <div class="row"><button class="btn primary">등록</button><button class="btn" type="button" data-close>취소</button></div>
+    <p class="muted small">이미 같은 연락처의 문의가 있으면 새로 만들지 않고 그 문의에 재문의로 붙습니다.</p>
+    <div class="row"><button class="btn primary">등록하고 상담 시작</button><button class="btn" type="button" data-close>취소</button></div>
   </form>
 </dialog>
 {% endblock %}

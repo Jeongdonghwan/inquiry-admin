@@ -64,6 +64,10 @@ def create_app(config_object=Config) -> Flask:
     def kdate(dt):
         return dt.strftime("%m.%d %H:%M") if dt else ""
 
+    @app.template_filter("kdatefull")
+    def kdatefull(dt):
+        return f"{dt:%Y.%m.%d} ({WEEKDAYS[dt.weekday()]}) {dt:%H:%M}" if dt else ""
+
     @app.template_filter("kcallback")
     def kcallback(dt):
         return kcallback_str(dt) if dt else "미지정"

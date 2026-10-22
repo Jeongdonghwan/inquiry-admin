@@ -2,12 +2,12 @@
 {% block title %}문자 발송내역 · 상담관리{% endblock %}
 {% block content %}
 <header class="topbar">
-  <div class="title"><h1>문자 발송내역</h1><span class="sub">자동·수동 발송 전체 · 예약 취소 · 실패 재발송</span></div>
+  <div class="title"><h1>문자 발송내역</h1><span class="sub">자동·담당자 발송 전체 · 예약 취소 · 실패 재발송</span></div>
   <form method="get" class="row">
     <select name="period" class="sel"><option value="">기간 전체</option>{% for v,l in (('today','오늘'),('7','7일'),('30','30일')) %}<option value="{{ v }}" {{ 'selected' if args.get('period')==v }}>{{ l }}</option>{% endfor %}</select>
     <select name="site" class="sel"><option value="">사이트 전체</option>{% for s in sites %}<option value="{{ s.code }}" {{ 'selected' if args.get('site')==s.code }}>{{ s.name }}</option>{% endfor %}</select>
     <select name="status" class="sel"><option value="">상태 전체</option>{% for k,l in labels.items() %}<option value="{{ k }}" {{ 'selected' if args.get('status')==k }}>{{ l }}</option>{% endfor %}</select>
-    <select name="auto" class="sel"><option value="">자동/수동</option><option value="1" {{ 'selected' if args.get('auto')=='1' }}>자동</option><option value="0" {{ 'selected' if args.get('auto')=='0' }}>수동</option></select>
+    <select name="auto" class="sel"><option value="">발송자 전체</option><option value="1" {{ 'selected' if args.get('auto')=='1' }}>자동</option><option value="0" {{ 'selected' if args.get('auto')=='0' }}>담당자</option></select>
     <button class="btn">조회</button>
   </form>
 </header>
@@ -23,9 +23,9 @@
       <span class="mono">{{ m.to_phone|phone }}</span>
       <span class="ellipsis" title="{{ m.body }}">{{ m.body }}{% if m.error %} <em class="warn small">— {{ m.error }}</em>{% endif %}</span>
       <span class="mono">{{ m.msg_type }} {{ m.byte_len }}b</span>
-      <span>{{ '자동' if m.is_auto else '수동' }}</span>
+      <span>{{ '자동' if m.is_auto or not m.user_id else (users[m.user_id].name if m.user_id in users else '담당자') }}</span>
       <span class="actions">
-        {% if m.inquiry_id %}<a class="btn sm" href="{{ url_for('inquiries.list_view', id=m.inquiry_id) }}">문의</a>{% endif %}
+        {% if m.inquiry_id %}<a class="btn sm" href="{{ url_for('inquiries.detail_view', inquiry_id=m.inquiry_id) }}">문의</a>{% endif %}
         {% if m.status in ('queued','scheduled') %}<form method="post" action="{{ url_for('sms.cancel', mid=m.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn sm">취소</button></form>{% endif %}
         {% if m.status == 'failed' %}<form method="post" action="{{ url_for('sms.retry', mid=m.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn sm">재발송</button></form>{% endif %}
       </span>

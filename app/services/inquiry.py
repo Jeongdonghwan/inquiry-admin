@@ -117,18 +117,52 @@ def create_manual(user: User, site: Site, data: dict) -> Inquiry:
     from .intake import validate
     if user.site_ids() is not None and site.id not in user.site_ids():
         raise ServiceError("담당하지 않는 사이트입니다")
+    from .merge import find_existing, reinquire
     data = dict(data, privacy_agreed="1")
     fields = validate(data)
     now = now_kst()
-    prev = (Inquiry.query.filter(Inquiry.phone == fields["phone"], Inquiry.received_at >= now - timedelta(days=30))
-            .order_by(Inquiry.received_at.desc()).first())
-    inq = Inquiry(site=site, status="new", received_at=now, privacy_agreed=True, device="pc",
-                  duplicate_of_id=prev.id if prev else None, assignee_id=user.id if user.role == "agent" else None, **fields)
+    prev = find_existing(fields["phone"])
+    if prev:  # 같은 연락처 → 기존 문의로 편입
+        if not can_access(user, prev):
+            raise ServiceError("같은 연락처의 문의가 다른 담당 범위에 있습니다. 관리자에게 문의하세요")
+        reinquire(prev, source="☎ 전화로", message=fields["message"], user=user, inquiry_type=fields["inquiry_type"])
+        db.session.commit()
+        return prev
+    inq = Inquiry(site=site, status="new", received_at=now, privacy_agreed=True, device="pc", channel="phone",
+                  assignee_id=user.id if user.role == "agent" else None, **fields)
     db.session.add(inq)
     db.session.flush()
-    log(inq, user, "received", f"{user.display}이(가) 수동 등록 (전화 접수)")
+    log(inq, user, "received", f"☎ 전화 직접접수 (등록: {user.display})")
     db.session.commit()
     return inq
+
+
+def update_info(inq: Inquiry, user: User, data: dict) -> None:
+    """고객 이름·연락처·추가 연락처·지역 수정."""
+    import re
+    _check(user, inq)
+    if inq.is_masked:
+        raise ServiceError("보관기간이 지나 마스킹된 문의는 수정할 수 없습니다")
+    name = (data.get("customer_name") or "").strip()[:50]
+    phone = re.sub(r"\D", "", data.get("phone") or "")
+    phone2 = re.sub(r"\D", "", data.get("phone2") or "") or None
+    region = (data.get("region") or "").strip()[:100] or None
+    if not name:
+        raise ServiceError("이름을 입력하세요")
+    for p in filter(None, [phone, phone2]):
+        if not re.fullmatch(r"0\d{8,10}", p):
+            raise ServiceError(f"연락처 형식이 올바르지 않습니다: {p}")
+    if not phone:
+        raise ServiceError("연락처를 입력하세요")
+    changes = []
+    for label, attr, new in (("이름", "customer_name", name), ("연락처", "phone", phone), ("추가 연락처", "phone2", phone2), ("지역", "region", region)):
+        old = getattr(inq, attr)
+        if (old or None) != (new or None):
+            changes.append(f"{label} {old or '없음'} → {new or '없음'}")
+            setattr(inq, attr, new)
+    if changes:
+        log(inq, user, "system", "정보 수정: " + ", ".join(changes))
+        db.session.commit()
 
 
 # ---- 조회 범위·필터 ----

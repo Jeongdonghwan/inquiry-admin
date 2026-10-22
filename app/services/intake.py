@@ -89,20 +89,21 @@ def intake(site: Site, data: dict, *, ip: str | None = None, user_agent: str | N
     fields = validate(data)
     now = now_kst()
 
-    # 중복 판정: 같은 번호의 최근 30일 내 문의(사이트 무관) → 가장 최근 건
-    prev = (Inquiry.query.filter(Inquiry.phone == fields["phone"],
-                                 Inquiry.received_at >= now - timedelta(days=DUP_WINDOW_DAYS))
-            .order_by(Inquiry.received_at.desc()).first())
-    # 같은 번호 + 같은 사이트 10분 내 재접수 → 자동문자 생략
-    recent_same_site = prev is not None and prev.site_id == site.id and \
-        prev.received_at >= now - timedelta(minutes=AUTO_SMS_SKIP_MINUTES)
+    # 같은 연락처(추가 연락처 포함)가 이미 있으면 새 건을 만들지 않고 그 문의로 편입
+    from .merge import find_existing, reinquire
+    prev = find_existing(fields["phone"])
+    last_at = (prev.last_received_at or prev.received_at) if prev else None
+    recent_same_site = prev is not None and prev.site_id == site.id and last_at >= now - timedelta(minutes=AUTO_SMS_SKIP_MINUTES)
 
-    inq = Inquiry(site=site, status="new", received_at=now, privacy_agreed=True,
-                  device=detect_device(user_agent), ip=ip, user_agent=(user_agent or "")[:500] or None,
-                  duplicate_of_id=prev.id if prev else None, **fields)
-    db.session.add(inq)
-    db.session.flush()
-    db.session.add(InquiryLog(inquiry_id=inq.id, kind="received", body=f"{site.name} 상담폼으로 접수", created_at=now))
+    if prev:
+        inq = prev
+        reinquire(inq, source=f"{site.name} 상담폼으로", message=fields["message"], inquiry_type=fields["inquiry_type"])
+    else:
+        inq = Inquiry(site=site, status="new", received_at=now, privacy_agreed=True, channel="web",
+                      device=detect_device(user_agent), ip=ip, user_agent=(user_agent or "")[:500] or None, **fields)
+        db.session.add(inq)
+        db.session.flush()
+        db.session.add(InquiryLog(inquiry_id=inq.id, kind="received", body=f"{site.name} 상담폼으로 접수", created_at=now))
 
     queued = False
     tpl = auto_reply_template(site) if site.auto_reply and not recent_same_site else None

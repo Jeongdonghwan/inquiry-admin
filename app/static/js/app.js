@@ -37,7 +37,37 @@ const App = (() => {
   $('[data-toggle="filters"]')?.addEventListener('click', () => $('#filters').classList.toggle('open'));
   if ($('#manual .flash')) $('#manual').showModal();
 
-  // ---------- 상세 페이지 (새 탭) ----------
+  // ---------- 목록: 행 클릭 → 상세(같은 탭), 체크 → 단체 문자 ----------
+  const rowsEl = $('#rows');
+  if (rowsEl) {
+    rowsEl.addEventListener('click', e => {
+      if (e.target.closest('input, a, label')) return;
+      const row = e.target.closest('.rowbtn'); if (row) location.href = row.dataset.href;
+    });
+    const bar = $('#bulkbar'), all = $('[data-check-all]'), body = $('[data-bulk-body]', bar);
+    const checked = () => $$('[data-row-check]:checked').map(c => c.value);
+    const sync = () => {
+      const n = checked().length; bar.hidden = n === 0; $('[data-bulk-count]', bar).textContent = n;
+      $$('.rowbtn').forEach(r => r.classList.toggle('on', $('[data-row-check]', r).checked));
+      if (all) all.checked = n > 0 && n === $$('[data-row-check]').length;
+    };
+    rowsEl.addEventListener('change', e => { if (e.target.matches('[data-row-check]')) sync(); });
+    all?.addEventListener('change', () => { $$('[data-row-check]').forEach(c => c.checked = all.checked); sync(); });
+    const updB = () => { $('[data-bulk-bytes]', bar).textContent = bytes(body.value); };
+    body.addEventListener('input', updB);
+    $('[data-bulk-tpl]', bar).addEventListener('change', e => { if (e.target.value) { body.value = e.target.value; updB(); } e.target.value = ''; });
+    $('[data-bulk-clear]', bar).addEventListener('click', () => { $$('[data-row-check]').forEach(c => c.checked = false); sync(); });
+    $('[data-bulk-send]', bar).addEventListener('click', async () => {
+      const ids = checked(); const text = body.value.trim();
+      if (!text) return toast('문자 내용을 입력하세요');
+      if (!confirm(`${ids.length}명에게 문자를 보냅니다. {이름} 등은 각 고객 정보로 바뀝니다. 계속할까요?`)) return;
+      const j = await post('/inquiries/bulk-sms', { ids, body: text });
+      toast(`발송 ${j.sent}건` + (j.failed ? ` · 실패 ${j.failed}건(발송내역에서 재발송)` : '') + (j.skipped ? ` · 제외 ${j.skipped}건` : ''));
+      body.value = ''; updB(); $$('[data-row-check]').forEach(c => c.checked = false); sync();
+    });
+  }
+
+  // ---------- 상세 페이지 ----------
   const detail = $('#detail');
   const target = () => detail;
   function applyResult(id, j) { target().innerHTML = j.panel_html; bindPanel(target()); }
@@ -47,7 +77,11 @@ const App = (() => {
   function bindPanel(root) {
     const dp = $('.dp', root); if (!dp) return;
     const id = dp.dataset.id;
-    $$('[data-pick]', dp).forEach(a => { a.target = '_blank'; a.href = `/inquiries/${a.dataset.pick}`; });
+    $$('[data-pick]', dp).forEach(a => { a.href = `/inquiries/${a.dataset.pick}`; });
+    // 고객 정보 수정
+    const infoForm = $('[data-info-form]', dp);
+    $$('[data-edit-toggle]', dp).forEach(b => b.onclick = () => { infoForm.hidden = !infoForm.hidden; });
+    infoForm?.addEventListener('submit', e => { e.preventDefault(); act(id, 'info', Object.fromEntries(new FormData(infoForm))); });
     $('[data-call]', dp)?.addEventListener('click', () => { $$('[data-record^="call"]', dp).forEach(b => b.classList.add('pulse')); $('.dp-tabs [data-tab="log"]', dp)?.click(); });
     // 탭 (A안) · 작성기 전환 (B안)
     $$('[data-tab]', dp).forEach(b => b.onclick = () => {
@@ -78,7 +112,7 @@ const App = (() => {
     if (sms) {
       const upd = () => { const n = bytes(sms.value); $('[data-bytes]', dp).textContent = n; const t = $('[data-smstype]', dp); t.textContent = n > 90 ? 'LMS 장문' : 'SMS 단문'; t.classList.toggle('warn', n > 2000); };
       sms.addEventListener('input', upd); upd();
-      $$('[data-tpl]', dp).forEach(b => b.onclick = () => { sms.value = b.dataset.tpl; upd(); });
+      $('[data-tpl-select]', dp)?.addEventListener('change', e => { if (e.target.value) { sms.value = e.target.value; upd(); sms.focus(); } e.target.value = ''; });
       $$('[data-sms-send]', dp).forEach(b => b.onclick = async () => {
         const body = sms.value.trim(); if (!body) return toast('문자 내용을 입력하세요');
         if (/\{[^}]+\}/.test(body) && !confirm('치환되지 않은 {변수}가 남아 있습니다. 그대로 보낼까요?')) return;
@@ -98,6 +132,7 @@ const App = (() => {
       if (t === 'multi') a[k] = $$('input:checked', sf).map(i => i.value);
       else if (t === 'bool') a[k] = $('input', sf).checked;
       else { const v = $('[name]', sf)?.value ?? ''; if (v !== '') a[k] = v; }
+      $$('[data-check]', sf).forEach(c => { a[c.dataset.check] = c.checked; });
     });
     return a;
   }
@@ -107,13 +142,16 @@ const App = (() => {
   }
   function bindSheet(pane) {
     const box = $('.sheet', pane), form = $('[data-sheet-form-body]', pane), state = $('[data-save-state]', pane);
-    $('[data-sheet-form]', pane)?.addEventListener('change', e => { const u = new URL(pane.dataset.src, location); u.searchParams.delete('form_id'); if (e.target.value) u.searchParams.set('form_id', e.target.value); loadSheet(pane, u); });
+    const openForm = fid => { const u = new URL(pane.dataset.src, location); u.searchParams.delete('form_id'); if (fid) u.searchParams.set('form_id', fid); loadSheet(pane, u.pathname + u.search); };
+    $$('[data-sheet-tab]', pane).forEach(b => b.onclick = () => openForm(b.dataset.sheetTab));
+    $('[data-sheet-add]', pane)?.addEventListener('change', e => { if (e.target.value) openForm(e.target.value); });
     if (!form) return;
     const save = async () => {
       state.textContent = '저장 중…';
       try {
         const j = await post(box.dataset.save, { form_id: box.dataset.formId, answers: collect(form) });
         state.textContent = '저장됨 ' + j.saved_at;
+        $('.sheet-tabs button.on em', pane)?.remove();
         $$('.sf.req', form).forEach(sf => sf.classList.toggle('missing', j.missing.includes($('.sf-label', sf).textContent.replace('*', ''))));
 
       } catch (e) { state.textContent = '저장 실패 — 다시 시도'; }

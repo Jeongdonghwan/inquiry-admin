@@ -55,17 +55,29 @@ def test_validation_errors(client):
     assert client.post("/api/v1/inquiries", json={"name": "", "phone": "01011112222", "privacy_agreed": 1}, headers=h).json["error"] == "name_invalid"
 
 
-def test_duplicate_marks_previous(client):
+def test_same_phone_merges_into_existing(client):
     secret = _secret_for(_site())
     h = {"X-Site-Key": secret}
-    body = {"name": "중복", "phone": "01055556666", "privacy_agreed": 1}
-    first = client.post("/api/v1/inquiries", json=body, headers=h).json["id"]
-    second = client.post("/api/v1/inquiries", json=body, headers=h).json["id"]
-    assert db.session.get(Inquiry, first).duplicate_of_id is None
-    assert db.session.get(Inquiry, second).duplicate_of_id == first
-    # 같은 사이트 10분 내 재접수 → 두 번째는 자동문자 생략
+    first = client.post("/api/v1/inquiries", json={"name": "중복", "phone": "01055556666", "privacy_agreed": 1}, headers=h).json["id"]
+    second = client.post("/api/v1/inquiries", json={"name": "중복", "phone": "010-5555-6666", "privacy_agreed": 1,
+                                                    "message": "다시 문의드립니다"}, headers=h).json["id"]
+    assert first == second  # 같은 연락처 = 문의 1건
+    inq = db.session.get(Inquiry, first)
+    assert inq.last_received_at is not None
+    assert any("재문의" in l.body and "다시 문의드립니다" in l.body for l in inq.logs)
+    # 같은 사이트 10분 내 재접수 → 자동문자 1번만
     assert SmsMessage.query.filter_by(inquiry_id=first).count() == 1
-    assert SmsMessage.query.filter_by(inquiry_id=second).count() == 0
+
+
+def test_reinquiry_reopens_closed(client):
+    secret = _secret_for(_site())
+    h = {"X-Site-Key": secret}
+    i = client.post("/api/v1/inquiries", json={"name": "a", "phone": "01077776666", "privacy_agreed": 1}, headers=h).json["id"]
+    inq = db.session.get(Inquiry, i)
+    inq.status = "closed"
+    db.session.commit()
+    client.post("/api/v1/inquiries", json={"name": "a", "phone": "01077776666", "privacy_agreed": 1}, headers=h)
+    assert db.session.get(Inquiry, i).status == "new"
 
 
 def test_honeypot_not_saved(client):

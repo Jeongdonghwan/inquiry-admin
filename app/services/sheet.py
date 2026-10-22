@@ -34,8 +34,16 @@ def match_form(inq: Inquiry) -> ConsultForm | None:
     return best
 
 
-def current_sheet(inq: Inquiry) -> ConsultSheet | None:
-    return ConsultSheet.query.filter_by(inquiry_id=inq.id, is_current=True).first()
+def sheets_of(inq: Inquiry) -> list[ConsultSheet]:
+    """문의 1건의 사건별 상담지 (양식마다 1개), 작성 순."""
+    return ConsultSheet.query.filter_by(inquiry_id=inq.id, is_current=True).order_by(ConsultSheet.id).all()
+
+
+def current_sheet(inq: Inquiry, form_id: int | None = None) -> ConsultSheet | None:
+    q = ConsultSheet.query.filter_by(inquiry_id=inq.id, is_current=True)
+    if form_id:
+        q = q.filter_by(form_id=form_id)
+    return q.order_by(ConsultSheet.id).first()
 
 
 # ---- 스키마 ----
@@ -66,8 +74,7 @@ def missing_required(schema: dict, answers: dict) -> list[str]:
 
 def sheet_incomplete(inq: Inquiry) -> bool:
     """탭 옆 주황 점용: 현재 상담지가 있고 필수가 비었으면 True."""
-    s = current_sheet(inq)
-    return bool(s and not s.required_done)
+    return any(not s.required_done for s in sheets_of(inq))
 
 
 def validate_schema(schema: dict) -> None:
@@ -82,9 +89,11 @@ def validate_schema(schema: dict) -> None:
             k = f.get("key", "")
             if not re.fullmatch(r"[a-z][a-z0-9_]{0,39}", k or ""):
                 raise SchemaError(f"'{f.get('label') or k}': key는 영문 소문자 snake_case")
-            if k in keys:
-                raise SchemaError(f"'{f.get('label')}': key '{k}' 중복")
-            keys.add(k)
+            ck = (f.get("check") or {}).get("key")
+            for kk in filter(None, [k, ck]):
+                if kk in keys:
+                    raise SchemaError(f"'{f.get('label')}': key '{kk}' 중복")
+                keys.add(kk)
             if not f.get("label"):
                 raise SchemaError(f"'{k}': 라벨이 없습니다")
             if f.get("type") not in FIELD_TYPES:
@@ -138,18 +147,14 @@ def save_answers(inq: Inquiry, user: User, form_id: int, answers: dict) -> Consu
     form = db.session.get(ConsultForm, form_id)
     if form is None or not form.is_active:
         raise SchemaError("양식을 찾을 수 없습니다")
-    cur = current_sheet(inq)
+    cur = current_sheet(inq, form.id)
     answers = coerce_answers(form.schema_json, answers)
-    if cur and cur.form_id != form.id:
-        cur.is_current = False  # 양식 변경: 이전 답변 보존
-        inq_svc.log(inq, user, "sheet", f"상담지 양식 변경: {cur.form.name} → {form.name}")
-        cur = None
-    if cur is None:
+    if cur is None:  # 이 사건(양식)의 상담지 처음 작성 — 다른 사건 상담지는 그대로 둠
+        first = not sheets_of(inq)
         cur = ConsultSheet(inquiry_id=inq.id, form_id=form.id, form_version=form.version, answers_json={},
                            created_by=user.id)
         db.session.add(cur)
-        if not any(l.kind == "sheet" and l.body.startswith("상담지 작성 시작") for l in inq.logs):
-            inq_svc.log(inq, user, "sheet", f"상담지 작성 시작: {form.name}")
+        inq_svc.log(inq, user, "sheet", f"상담지 {'작성 시작' if first else '추가'}: {form.name}")
     cur.answers_json = answers
     cur.required_done = required_done(form.schema_json, answers)
     cur.updated_by = user.id
@@ -168,12 +173,15 @@ def summary_text(sheet: ConsultSheet) -> str:
             v = a.get(f["key"])
             if v in (None, "", []) or not visible(f, a):
                 continue
+            ck = f.get("check")
             if f["type"] == "bool":
                 v = "예" if v else "아니오"
             elif f["type"] == "multi":
                 v = ", ".join(v)
             elif f["type"] == "number":
                 v = f"{v:,}{f.get('unit', '')}" if isinstance(v, (int, float)) else v
+            if ck and a.get(ck["key"]):
+                v = f"{v} ({ck['label']})"
             rows.append(f"- {f['label']}: {v}")
         if rows:
             lines.append(f"\n■ {sec['title']}")

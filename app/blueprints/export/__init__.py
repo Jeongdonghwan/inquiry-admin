@@ -25,10 +25,12 @@ HEAD = ["번호", "상태", "접수일시", "사이트", "업종", "고객명", 
 def export_xlsx():
     base, q = svc.apply_filters(svc.scoped_query(current_user), current_user, request.args)
     rows = q.order_by(Inquiry.received_at.desc()).all()
-    sheets = {s.inquiry_id: s for s in ConsultSheet.query.filter(ConsultSheet.is_current.is_(True),
-                                                                   ConsultSheet.inquiry_id.in_([r.id for r in rows] or [-1]))}
-    form_ids = {s.form_id for s in sheets.values()}
-    single_form = sheets[next(iter(sheets))].form if len(form_ids) == 1 else None  # 양식이 하나로 통일될 때만 열 펼침
+    sheets = {}
+    for s in ConsultSheet.query.filter(ConsultSheet.is_current.is_(True),
+                                                                   ConsultSheet.inquiry_id.in_([r.id for r in rows] or [-1])).order_by(ConsultSheet.id):
+        sheets.setdefault(s.inquiry_id, []).append(s)
+    form_ids = {s.form_id for lst in sheets.values() for s in lst}
+    single_form = next(iter(sheets.values()))[0].form if len(form_ids) == 1 else None  # 양식이 하나로 통일될 때만 열 펼침
 
     wb = Workbook()
     ws = wb.active
@@ -50,14 +52,14 @@ def export_xlsx():
                r.assignee.display if r.assignee else "미배정", f(r.callback_at), r.utm_term or "", r.utm_source or "",
                r.utm_medium or "", r.utm_campaign or "", r.device or "", "Y" if r.duplicate_of_id else "",
                f(r.first_contact_at), f(r.contracted_at), f(r.closed_at), r.close_reason or ""]
-        s = sheets.get(r.id)
+        lst = sheets.get(r.id, [])
         if single_form:
-            a = s.answers_json if s else {}
+            a = lst[0].answers_json if lst else {}
             for fld in sheet_svc.fields_of(single_form.schema_json):
                 v = a.get(fld["key"], "")
                 row.append(", ".join(v) if isinstance(v, list) else ("예" if v is True else "아니오" if v is False else v))
         elif sheets:
-            row.append(sheet_svc.summary_text(s) if s else "")
+            row.append("\n\n".join(sheet_svc.summary_text(x) for x in lst))
         ws.append(row)
     for i, _ in enumerate(head, 1):
         ws.column_dimensions[get_column_letter(i)].width = 14

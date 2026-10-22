@@ -14,7 +14,7 @@
     {% elif f.type == 'bool' %}
       <label class="check"><input type="checkbox" name="{{ f.key }}" value="true" {{ 'checked' if v }}><span>예</span></label>
     {% elif f.type == 'number' %}
-      <span class="num"><input id="sf-{{ f.key }}" name="{{ f.key }}" inputmode="decimal" class="mono" value="{{ '{:,}'.format(v) if v is number else (v or '') }}">{% if f.unit %}<em>{{ f.unit }}</em>{% endif %}</span>
+      <span class="num"><input id="sf-{{ f.key }}" name="{{ f.key }}" inputmode="decimal" class="mono" value="{{ '{:,}'.format(v) if v is number else (v or '') }}">{% if f.unit %}<em>{{ f.unit }}</em>{% endif %}{% if f.check %}<label class="check inline"><input type="checkbox" data-check="{{ f.check.key }}" {{ 'checked' if a.get(f.check.key) }}><span>{{ f.check.label }}</span></label>{% endif %}</span>
     {% elif f.type == 'textarea' %}
       <textarea id="sf-{{ f.key }}" name="{{ f.key }}" rows="3">{{ v or '' }}</textarea>
     {% elif f.type == 'date' %}
