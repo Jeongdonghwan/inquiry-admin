@@ -19,7 +19,7 @@
   <div class="dash-row">
     <section class="panel pad">
       <h3>최근 7일 접수</h3>
-      <div class="bars tall">{% for d, n in daily.items() %}<div class="bar" title="{{ d.strftime('%m.%d') }} · {{ n }}건"><em class="mono">{{ n }}</em><i style="height:{{ (n / daily_max * 100)|round }}%"></i><span>{{ d.strftime('%m.%d') }}</span></div>{% endfor %}</div>
+      <div class="bars tall">{% for d, n in daily.items() %}<div class="bar {{ 'today' if loop.last }}" title="{{ d.strftime('%m.%d') }} · {{ n }}건"><em class="mono">{{ n }}</em><i style="height:{{ (n / daily_max * 100)|round }}%"></i><span>{{ d.strftime('%m.%d') }}</span></div>{% endfor %}</div>
     </section>
     <section class="panel pad">
       <h3>상태 분포</h3>
@@ -28,8 +28,8 @@
     </section>
     <section class="panel pad">
       <h3>사이트별 7일 접수</h3>
-      <ul class="hbars">{% for s, n in site_rows %}<li><a href="{{ url_for('inquiries.list_view', site=s.code, period='7') }}"><span class="site"><i class="dot" style="background:{{ s.color }}"></i>{{ s.name }}</span><i style="width:{{ (n / site_max * 100)|round }}%;background:{{ s.color }}"></i><b class="mono">{{ n }}</b></a></li>{% else %}<li class="muted small">연결된 사이트 없음</li>{% endfor %}
-        {% if phone_7 %}<li><a href="{{ url_for('inquiries.list_view', period='7') }}"><span class="site">☎ 전화 직접접수</span><i style="width:{{ (phone_7 / site_max * 100)|round }}%;background:#1c2230"></i><b class="mono">{{ phone_7 }}</b></a></li>{% endif %}</ul>
+      <ul class="hbars">{% for s, n in site_rows %}<li><a href="{{ url_for('inquiries.list_view', site=s.code, period='7') }}"><span class="site"><i class="dot" style="background:{{ s.color }}"></i>{{ s.name }}</span><i style="width:{{ (n / site_max * 100)|round }}%"></i><b class="mono">{{ n }}</b></a></li>{% else %}<li class="muted small">연결된 사이트 없음</li>{% endfor %}
+        {% if phone_7 %}<li><a href="{{ url_for('inquiries.list_view', period='7') }}"><span class="site">☎ 전화 직접접수</span><i style="width:{{ (phone_7 / site_max * 100)|round }}%"></i><b class="mono">{{ phone_7 }}</b></a></li>{% endif %}</ul>
     </section>
   </div>
 

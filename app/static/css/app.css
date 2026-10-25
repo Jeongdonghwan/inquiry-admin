@@ -398,3 +398,113 @@ a.trow{text-decoration:none;color:var(--text)}a.trow:hover{background:#f6f8fb}
 .sheet-tabs button em{font-style:normal;font-size:11px;opacity:.7}
 .sheet-tabs select{height:34px;border:1px dashed #9aa1ae;border-radius:17px;padding:0 12px;font-size:13px;background:#fff;color:var(--muted)}
 .sf .check.inline{display:inline-flex;margin-left:14px;min-height:0}
+
+
+/* =====================================================================
+   부드러운 테마 (2026-10-25): 둥근 모서리 · 테두리 대신 옅은 그림자 · 흰 사이드바 · 저채도 차트
+   ===================================================================== */
+:root{
+  --bg:#f4f5f8; --panel:#ffffff; --line:#e9ebf0; --line-soft:#f1f2f5;
+  --text:#262b36; --muted:#7c8392; --sidebar:#ffffff; --sidebar-active:#eef2ff; --sidebar-text:#525a6a;
+  --primary:#4c6ef5; --primary-dark:#3b5bdb; --accent:#ff7a45; --selected:#f3f6ff;
+  --radius:12px;
+  --font:'Pretendard Variable',Pretendard,-apple-system,'Malgun Gothic',sans-serif; --mono:var(--font);
+  --shadow:0 1px 2px rgba(20,28,45,.04),0 6px 20px rgba(20,28,45,.05);
+}
+body{font-size:14px;letter-spacing:-.01em;-webkit-font-smoothing:antialiased}
+.mono{font-family:var(--font);font-variant-numeric:tabular-nums;font-size:13px;letter-spacing:0}
+
+/* 사이드바 */
+.sidebar{background:#fff;border-right:1px solid var(--line);gap:24px;padding:24px 16px}
+.brand-name{color:var(--text);font-size:18px}
+.brand-co{color:var(--muted)}
+.nav a{color:var(--sidebar-text);border-radius:10px;padding:10px 12px;font-size:14px}
+.nav a:hover{background:#f5f6f9;color:var(--text)}
+.nav a.on{background:var(--sidebar-active);color:var(--primary-dark);font-weight:600}
+.nav-label{color:#9aa1ae;padding:0 12px 6px}
+.nav .site .dot{width:7px;height:7px}
+.badge.accent{background:var(--accent);border-radius:999px;font-size:11px;padding:1px 8px}
+.me{border-top:1px solid var(--line);color:var(--muted)}
+.me button{color:var(--muted)}.me button:hover{color:var(--text)}
+.menu-toggle{border-radius:10px}
+
+/* 상단바 · 탭 */
+.topbar{background:transparent;border-bottom:0;padding:22px 28px 10px}
+.topbar h1{font-size:22px;letter-spacing:-.4px}
+.topbar .search{border-radius:12px;border-color:var(--line);background:#fff;box-shadow:var(--shadow)}
+.seg{border-radius:12px;border-color:var(--line);background:#fff}
+.seg a{border-color:var(--line)}.seg a.on{background:var(--text)}
+.tabs{background:transparent;border-bottom:1px solid var(--line);margin:0 28px;padding:0}
+.tabs a{height:44px}
+.tabs a.on{box-shadow:inset 0 -2px 0 var(--primary)}
+.filters{background:transparent;border-bottom:0;padding:10px 28px}
+.filters select{border-radius:10px;border-color:var(--line)}
+.content{padding:18px 28px 28px;gap:18px}
+
+/* 패널 · 버튼 · 입력 */
+.panel{border:0;border-radius:16px;box-shadow:var(--shadow)}
+.btn{border-radius:10px;border-color:var(--line);height:38px}
+.btn.sm{border-radius:8px}
+.btn.primary{background:var(--primary);box-shadow:0 2px 8px rgba(76,110,245,.25)}
+.btn.primary:hover{background:var(--primary-dark)}
+input:not([type=checkbox]):not([type=radio]):not([type=color]),select,textarea{border-radius:10px!important}
+.pill{border-radius:999px;padding:3px 10px;font-weight:600}
+.pill.new{background:#fff1e8;color:#c2551a}.pill.contacting{background:#eef2ff;color:#3b5bdb}
+.pill.consulted{background:#e9f7f1;color:#1f7a5a}.pill.contracted{background:#eceef3;color:#2f3646}
+.pill.hold{background:#f3f4f6;color:#6b7280}.pill.closed{background:#f5f5f6;color:#9aa0a8}
+.tag{border-radius:999px}
+.flash,.dup-band{border-radius:12px}
+
+/* 목록 */
+.list{overflow:hidden}
+.thead.cols-inq,.table .thead{background:#fafbfc;border-bottom:1px solid var(--line-soft);color:#8b92a1}
+.rowbtn{border-bottom:1px solid var(--line-soft)}
+.rowbtn:hover{background:#fafbfd}.rowbtn.on{background:var(--selected)}
+.unassigned{color:#d2692f}
+.pager .pages a{border-radius:8px}.pager .pages a.on{background:var(--primary)}
+.bulkbar{background:#fff;color:var(--text);margin:8px 28px 0;border-radius:14px;box-shadow:var(--shadow);border:1px solid #dfe5ff}
+.bulkbar select,.bulkbar textarea{border-color:var(--line)}
+.bulkbar .muted{color:var(--muted)}
+
+/* 상세 · 상담지 */
+.dp .msg{background:#f8f9fb;border:0;border-radius:12px}
+.segs{border-radius:10px;border-color:var(--line)}
+.segs button{border-color:var(--line)}
+.segs button.on{background:var(--primary);color:#fff}
+.dp-tabs button.on{box-shadow:inset 0 -2px 0 var(--primary)}
+.log .kind{border-radius:999px;border-color:var(--line)}
+.info-edit{border-radius:12px;border:0;background:#f8f9fb}
+.sheet-page .sf{border-color:var(--line)}
+.sheet-page .sheet-sec .sf:first-of-type{border-radius:12px 12px 0 0;overflow:hidden}
+.sheet-page .sheet-sec .sf:last-child{border-radius:0 0 12px 12px;overflow:hidden}
+.sheet-page .sf-label{background:#f8f9fb;color:#4b5262}
+.sheet-page .sheet-sec legend::before{border-color:var(--primary);background:linear-gradient(135deg,transparent 45%,var(--primary) 45%,var(--primary) 55%,transparent 55%)}
+.sheet-tabs button.on{background:var(--primary);border-color:var(--primary)}
+.sheet-tabs button,.sheet-tabs select{border-color:var(--line)}
+
+/* 대시보드: 저채도 · 둥근 차트 */
+.kpi{border:0;border-radius:16px;box-shadow:var(--shadow);padding:18px 20px;gap:6px;transition:transform .15s,box-shadow .15s}
+.kpi b{font-size:28px;font-weight:700;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.kpi span{font-size:13px}
+.kpi.hot b{color:var(--accent)}
+.kpi:hover{transform:translateY(-1px);box-shadow:0 2px 4px rgba(20,28,45,.05),0 10px 28px rgba(20,28,45,.08)}
+.panel.pad h3{font-size:15px;color:var(--text);margin-bottom:16px}
+.bar i{background:#d6defc;border-radius:8px 8px 4px 4px}
+.bar.today i{background:var(--primary)}
+.bar em,.bar span{color:#9aa1ae}
+.stack{height:10px;border-radius:999px;background:#f1f2f5;gap:3px}
+.stack i{border-radius:999px}
+.seg-new{background:#ffb48f}.seg-contacting{background:#9fb4f7}.seg-consulted{background:#8fd1b6}
+.seg-contracted{background:#6b7385}.seg-hold{background:#cfd3db}.seg-closed{background:#e6e8ec}
+.legend{gap:8px}.legend b{font-weight:600}
+.hbars i{height:8px;border-radius:999px;background:#d6defc}
+.hbars li:first-child i{background:#9fb4f7}
+.log-kind{border-radius:999px;border-color:var(--line);color:#6b7280}
+a.trow:hover{background:#fafbfd}
+
+/* 로그인 */
+.login-body{background:linear-gradient(160deg,#f6f7fb 0%,#eef1f8 100%)}
+.login-card{border:0;border-radius:20px;box-shadow:0 10px 40px rgba(20,28,45,.08)}
+.login-mark{background:var(--primary)}
+.login-form input{background:#f8f9fb;border-color:var(--line)}
+.login-form .btn{border-radius:12px}
