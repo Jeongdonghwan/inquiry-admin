@@ -42,12 +42,16 @@ def _render_panel(inq: Inquiry) -> str:
     return render_template("inquiries/_detail.html", **_panel_ctx(inq))
 
 
+def _render_logs(inq: Inquiry) -> str:
+    return render_template("inquiries/_logs.html", **_panel_ctx(inq))
+
+
 def _render_row(inq: Inquiry, selected_id: int | None) -> str:
     return render_template("inquiries/_row.html", r=inq, selected_id=selected_id)
 
 
 def _action_response(inq: Inquiry):
-    return jsonify({"ok": True, "panel_html": _render_panel(inq), "row_html": _render_row(inq, None)})
+    return jsonify({"ok": True, "panel_html": _render_panel(inq), "logs_html": _render_logs(inq), "row_html": _render_row(inq, None)})
 
 
 # ---------- 목록 ----------
@@ -100,8 +104,8 @@ def detail_view(inquiry_id):
     from ..sheet import render_sheet
     inq = get_inquiry_or_404(current_user, inquiry_id)
     svc.record_view(current_user, inq, request.remote_addr)
-    return render_template("inquiries/detail.html", inq=inq, panel_html=_render_panel(inq), sheet_html=render_sheet(inq),
-                           back_url=_back_url())
+    return render_template("inquiries/detail.html", inq=inq, panel_html=_render_panel(inq), logs_html=_render_logs(inq),
+                           sheet_html=render_sheet(inq), back_url=_back_url())
 
 
 @bp.get("/inquiries/<int:inquiry_id>/panel")

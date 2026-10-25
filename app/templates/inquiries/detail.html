@@ -1,15 +1,17 @@
 {% extends "base.html" %}
-{% block title %}No.{{ inq.id }} {{ inq.customer_name }} · 상담관리{% endblock %}
+{% block title %}데이터입력 · {{ inq.customer_name }} · 상담관리{% endblock %}
 {% block content %}
 <header class="topbar">
-  <div class="title"><h1>{{ inq.customer_name }} <span class="muted">{{ inq.inquiry_type or '' }}</span></h1><span class="sub">{% if inq.channel == 'phone' %}☎ 전화 직접접수 · {% else %}<i class="dot" style="background:{{ inq.site.color }}"></i> {% endif %}{{ inq.site.name }} · No.{{ inq.id }} · 접수 {{ inq.received_at|kdatefull }}{% if inq.last_received_at %} · 최근 재문의 {{ inq.last_received_at|kdatefull }}{% endif %}</span></div>
+  <div class="title"><h1>데이터입력 <span class="muted">{{ inq.customer_name }} · {{ inq.inquiry_type or '' }}</span></h1>
+    <span class="sub">No.{{ inq.id }} · {% if inq.channel == 'phone' %}☎ 전화 직접접수{% else %}{{ inq.site.name }}{% endif %} · 접수 {{ inq.received_at|kdatefull }}</span></div>
   <a class="btn" href="{{ back_url }}">← 목록</a>
 </header>
-<div class="content detail-page">
-  <aside class="panel detail" id="detail">{{ panel_html|safe }}</aside>
-  <section class="panel sheet-page" id="sheet-inline" data-src="{{ url_for('sheet.sheet_view', inquiry_id=inq.id) }}">
-    <div class="sheet-page-head"><h3>상담지</h3><span class="muted small">사건별로 여러 개 작성 가능 · 입력하면 자동 저장</span></div>
+<div class="content col dform-page">
+  <section class="panel dform" id="detail">{{ panel_html|safe }}</section>
+  <section class="panel dform sheet-page" id="sheet-inline" data-src="{{ url_for('sheet.sheet_view', inquiry_id=inq.id) }}">
+    <div class="sheet-page-head"><h3>사건별 상담지</h3><span class="muted small">사건마다 따로 작성 · 입력하면 자동 저장</span></div>
     <div class="sheet-page-body">{{ sheet_html|safe }}</div>
   </section>
+  <section class="panel dform" id="detail-logs">{{ logs_html|safe }}</section>
 </div>
 {% endblock %}

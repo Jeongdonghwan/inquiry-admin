@@ -511,3 +511,42 @@ a.trow:hover{background:#fafbfd}
 
 .cols-dash-log>span:first-child,.cols-dash-new>span:first-child{min-width:0;overflow:hidden}
 .cols-dash-log .ellipsis{display:block}
+
+
+/* ---- 데이터입력 페이지 (표 형식, 전체 폭) ---- */
+.dform-page{max-width:1280px}
+.dform{padding:22px 24px 24px}
+.dform .dsec{margin:22px 0 10px;font-size:15px;display:flex;align-items:center;gap:8px}
+.dform .dsec::before{content:'';width:4px;height:16px;border-radius:2px;background:var(--primary)}
+.dform .dp>.dsec:first-child,.dform section>.dsec:first-child{margin-top:0}
+.dg{display:grid;grid-template-columns:130px minmax(0,1fr) 130px minmax(0,1fr);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.dg>.th{background:#f8f9fb;color:#4b5262;font-weight:600;font-size:13px;padding:12px 14px;display:flex;align-items:center;border-bottom:1px solid var(--line);border-right:1px solid var(--line)}
+.dg>.td{padding:8px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;border-bottom:1px solid var(--line);min-height:50px}
+.dg>.td:not(.span3):nth-child(4n+2){border-right:1px solid var(--line)}
+.dg>.span3{grid-column:span 3}
+.dg>.th:nth-last-child(2),.dg>.td:last-child{border-bottom:0}
+.dg input:not([type=checkbox]),.dg select{height:36px;border:1px solid var(--line);padding:0 10px;font-size:14px;width:100%;max-width:320px;background:#fff}
+.dg .row.nowrap{flex-wrap:nowrap}
+.dg .msg{white-space:pre-wrap;line-height:1.6;background:transparent;padding:12px 14px}
+.dg .segs{display:inline-grid;grid-auto-flow:column;grid-auto-columns:auto}
+.dg .segs button{padding:0 16px}
+.dg .re{color:var(--accent);font-size:12px}
+.dform-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
+.logs-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.logs-grid section{display:flex;flex-direction:column;gap:10px;min-width:0}
+.logs-grid textarea{width:100%;border:1px solid var(--line);padding:10px 12px;font-size:14px;resize:vertical}
+/* 상담지도 같은 표 형식: 라벨|값|라벨|값 */
+.sheet-page .sheet-sec{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:22px}
+.sheet-page .sheet-sec legend{float:none;grid-column:1/-1}
+.sheet-page .sheet-sec>.sf{border:0;border-bottom:1px solid var(--line);border-radius:0!important}
+.sheet-page .sheet-sec>.sf:nth-of-type(odd){border-right:1px solid var(--line)}
+.sheet-page .sf[data-type="textarea"],.sheet-page .sf[data-type="multi"],.sheet-page .sf[data-type="radio"]{grid-column:1/-1;border-right:0!important}
+.sheet-page .sheet-sec .sf:first-of-type{border-top:0}
+.sheet-page .sf-input input:not([type=checkbox]),.sheet-page .sf-input select{max-width:320px}
+.sheet-page .sf .num input{max-width:160px}
+@media (max-width:1100px){
+  .dg{grid-template-columns:110px minmax(0,1fr)}.dg>.span3{grid-column:span 1}
+  .dg>.td:not(.span3):nth-child(4n+2){border-right:0}
+  .sheet-page .sheet-sec{grid-template-columns:1fr}.sheet-page .sheet-sec>.sf{border-right:0!important}
+  .logs-grid{grid-template-columns:1fr}
+}

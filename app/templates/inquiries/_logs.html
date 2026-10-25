@@ -1,0 +1,27 @@
+{# 데이터입력 하단: 상담 기록 | 문자 보내기 (나란히) #}
+<div class="dp" data-id="{{ inq.id }}">
+  <div class="logs-grid">
+    <section>
+      <h3 class="dsec">상담 기록 <span class="muted small">{{ logs|length }}건</span></h3>
+      <textarea data-memo rows="3" placeholder="통화 내용이나 메모를 입력하세요"></textarea>
+      <div class="row">
+        <button type="button" class="btn sm" data-record="call">통화 완료로 기록</button>
+        <button type="button" class="btn sm" data-record="call_missed">부재중 기록</button>
+        <button type="button" class="btn sm primary" data-record="memo">메모 등록</button>
+      </div>
+      <ul class="logs">{% for lg in logs %}{% include "inquiries/_log_item.html" %}{% endfor %}</ul>
+    </section>
+    <section id="sms-box">
+      <h3 class="dsec">문자 보내기</h3>
+      <div class="sms-meta"><span>받는 사람 <b>{{ inq.customer_name }}</b> · <span class="mono">{{ inq.phone|phone }}</span></span><span>발신번호 <span class="mono">{{ (inq.site.sender_number or config.SMS_DEFAULT_SENDER)|phone }}</span></span></div>
+      <div class="tpl-pick">
+        <select data-tpl-select><option value="">템플릿 불러오기 ({{ templates|length }}개)</option>{% for t in templates %}<option value="{{ t.body }}">{{ t.name }}</option>{% endfor %}</select>
+        <span class="muted small">고르면 이름·사이트가 채워진 문구가 들어갑니다. 고쳐서 보내거나 직접 써도 됩니다.{% if current_user.is_admin %} 문구 관리: <a href="{{ url_for('settings.templates') }}">문자 템플릿</a>{% endif %}</span>
+      </div>
+      <textarea data-sms rows="6" placeholder="문자 내용"></textarea>
+      <div class="sms-foot"><span class="muted small"><span data-bytes>0</span> byte · <span data-smstype>SMS 단문</span></span>
+        <span class="row"><input type="datetime-local" data-sms-at><button type="button" class="btn sm" data-sms-send="scheduled">예약 발송</button><button type="button" class="btn sm primary" data-sms-send="now">지금 보내기</button></span></div>
+      <div class="sent-note" hidden>발송 완료 · 상담 기록에 저장되었습니다.</div>
+    </section>
+  </div>
+</div>

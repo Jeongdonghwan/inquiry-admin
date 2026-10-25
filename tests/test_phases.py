@@ -222,7 +222,7 @@ def test_sms_endpoint_and_list(client, login):
     login("yoon")
     i = inq("정다은")
     r = client.post(f"/inquiries/{i.id}/sms", json={"body": "테스트 발송"})
-    assert r.status_code == 200 and "테스트 발송" in r.get_json()["panel_html"]
+    assert r.status_code == 200 and "테스트 발송" in r.get_json()["logs_html"]
     assert "테스트 발송".encode() in client.get("/sms/?status=sent").data
 
 

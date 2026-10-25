@@ -68,9 +68,12 @@ const App = (() => {
   }
 
   // ---------- 상세 페이지 ----------
-  const detail = $('#detail');
+  const detail = $('#detail'), logsBox = $('#detail-logs');
   const target = () => detail;
-  function applyResult(id, j) { target().innerHTML = j.panel_html; bindPanel(target()); }
+  function applyResult(id, j) {
+    detail.innerHTML = j.panel_html; bindPanel(detail);
+    if (logsBox && j.logs_html) { logsBox.innerHTML = j.logs_html; bindPanel(logsBox); }
+  }
   const act = (id, path, data) => post(`/inquiries/${id}/${path}`, data).then(j => applyResult(id, j));
 
   // ---------- 상세 패널 바인딩 ----------
@@ -80,9 +83,8 @@ const App = (() => {
     $$('[data-pick]', dp).forEach(a => { a.href = `/inquiries/${a.dataset.pick}`; });
     // 고객 정보 수정
     const infoForm = $('[data-info-form]', dp);
-    $$('[data-edit-toggle]', dp).forEach(b => b.onclick = () => { infoForm.hidden = !infoForm.hidden; });
-    infoForm?.addEventListener('submit', e => { e.preventDefault(); act(id, 'info', Object.fromEntries(new FormData(infoForm))); });
-    $('[data-call]', dp)?.addEventListener('click', () => { $$('[data-record^="call"]', dp).forEach(b => b.classList.add('pulse')); $('.dp-tabs [data-tab="log"]', dp)?.click(); });
+    infoForm?.addEventListener('submit', e => { e.preventDefault(); act(id, 'info', Object.fromEntries(new FormData(infoForm))).then(() => toast('인적사항을 저장했습니다')); });
+    $('[data-call]', dp)?.addEventListener('click', () => { $$('[data-record^="call"]').forEach(b => b.classList.add('pulse')); $('[data-memo]')?.scrollIntoView({ block: 'center' }); });
     // 탭 (A안) · 작성기 전환 (B안)
     $$('[data-tab]', dp).forEach(b => b.onclick = () => {
       $$('.dp-tabs [data-tab]', dp).forEach(x => x.classList.toggle('on', x.dataset.tab === b.dataset.tab));
@@ -118,7 +120,7 @@ const App = (() => {
         if (/\{[^}]+\}/.test(body) && !confirm('치환되지 않은 {변수}가 남아 있습니다. 그대로 보낼까요?')) return;
         const data = { body }; if (b.dataset.smsSend === 'scheduled') { const at = $('[data-sms-at]', dp).value; if (!at) return toast('예약 일시를 선택하세요'); data.scheduled_at = at; }
         const j = await post(`/inquiries/${id}/sms`, data);
-        applyResult(id, j); const root2 = target(), n = $('.sent-note', root2); if (n) { n.hidden = false; ($('.dp-tabs [data-tab="sms"]', root2) || $('[data-ctab="sms"]', root2))?.click(); }
+        applyResult(id, j); const n = $('#detail-logs .sent-note'); if (n) n.hidden = false;
       });
     }
   }
@@ -267,6 +269,7 @@ const App = (() => {
 
   // 초기 바인딩: 상세 페이지
   if (detail && $('.dp', detail)) bindPanel(detail);
+  if (logsBox && $('.dp', logsBox)) bindPanel(logsBox);
   const sheetInline = $('#sheet-inline');
   if (sheetInline) { const body = $('.sheet-page-body', sheetInline); body.dataset.src = sheetInline.dataset.src; bindSheet(body); }
   return { post, toast, bindPanel, applyResult };

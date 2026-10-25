@@ -1,90 +1,56 @@
+{# 데이터입력 상단: 처리상태·상담일·관리자 / 인적사항 (액션 후 이 조각만 교체) #}
 <div class="dp" data-id="{{ inq.id }}">
-  <div class="dp-head">
-    <div class="meta"><i class="dot" style="background:{{ inq.site.color }}"></i>{{ inq.site.name }} · {{ CATEGORIES[inq.site.category] }} · <span class="mono">No.{{ inq.id }}</span></div>
-    <div class="name-row">
-      <div><span class="name">{{ inq.customer_name }}</span><span class="type">{{ inq.inquiry_type or '' }}</span></div>
-      <div class="phone mono">{{ inq.phone|phone }}{% if inq.phone2 %}<br><span class="muted">{{ inq.phone2|phone }}</span>{% endif %}</div>
+  <div class="dg">
+    <div class="th">처리상태</div>
+    <div class="td span3">
+      <div class="segs" data-status-group>
+        {% for s, label in STATUS_LABELS.items() %}<button type="button" class="{{ 'on' if inq.status == s }}" data-status="{{ s }}">{{ label }}</button>{% endfor %}
+      </div>
+      <div class="close-reason" hidden>
+        <select data-close-reason>{% for r in close_reasons %}<option>{{ r }}</option>{% endfor %}</select>
+        <input data-close-other placeholder="기타 사유 입력" hidden>
+        <button type="button" class="btn sm primary" data-close-confirm>종결 처리</button>
+        <button type="button" class="btn sm" data-close-cancel>취소</button>
+      </div>
+      {% if inq.status == 'closed' and inq.close_reason %}<span class="muted small">종결 사유: {{ inq.close_reason }}</span>{% endif %}
     </div>
-    <div class="head-actions">
-      <a class="btn" href="tel:{{ inq.phone }}" data-call>전화</a>
-      <button class="btn" type="button" data-tab="sms">문자</button>
-      {% if not inq.is_masked %}<button class="btn" type="button" data-edit-toggle>정보 수정</button>{% endif %}
-    </div>
-    <form class="info-edit" data-info-form hidden>
-      <div class="two"><label>이름<input name="customer_name" value="{{ inq.customer_name }}" maxlength="50" required></label>
-        <label>지역<input name="region" value="{{ inq.region or '' }}" maxlength="100"></label></div>
-      <div class="two"><label>연락처<input name="phone" value="{{ inq.phone|phone }}" inputmode="tel" required></label>
-        <label>추가 연락처<input name="phone2" value="{{ inq.phone2|phone if inq.phone2 else '' }}" inputmode="tel" placeholder="없으면 비움"></label></div>
-      <div class="row"><button type="submit" class="btn sm primary">저장</button><button type="button" class="btn sm" data-edit-toggle>취소</button>
-        <span class="muted small">추가 연락처로 들어온 문의도 이 건으로 합쳐집니다.</span></div>
-    </form>
-  </div>
 
-  {% if dups %}
-  <div class="dup-band">같은 연락처로 접수된 문의가 <b>{{ dups|length }}건</b> 더 있습니다 ·
-    {% for d in dups %}<a href="{{ url_for('inquiries.detail_view', inquiry_id=d.id) }}" data-pick="{{ d.id }}">No.{{ d.id }} {{ d.received_at|kdate }} {{ STATUS_LABELS[d.status] }}</a>{{ ' · ' if not loop.last }}{% endfor %}
-  </div>
-  {% endif %}
-
-  <div class="dp-sec">
-    <div class="lbl">상담 상태</div>
-    <div class="segs" data-status-group>
-      {% for s, label in STATUS_LABELS.items() %}<button type="button" class="{{ 'on' if inq.status == s }}" data-status="{{ s }}">{{ label }}</button>{% endfor %}
-    </div>
-    <div class="close-reason" hidden>
-      <select data-close-reason>{% for r in close_reasons %}<option>{{ r }}</option>{% endfor %}</select>
-      <input data-close-other placeholder="기타 사유 입력" hidden>
-      <button type="button" class="btn sm primary" data-close-confirm>종결 처리</button>
-      <button type="button" class="btn sm" data-close-cancel>취소</button>
-    </div>
-    {% if inq.status == 'closed' and inq.close_reason %}<div class="muted small">종결 사유: {{ inq.close_reason }}</div>{% endif %}
-  </div>
-
-  <div class="dp-grid">
-    <label>담당자
+    <div class="th">상담일</div>
+    <div class="td mono">{{ inq.received_at|kdatefull }}{% if inq.last_received_at %}<br><span class="re">재문의 {{ inq.last_received_at|kdatefull }}</span>{% endif %}</div>
+    <div class="th">관리자</div>
+    <div class="td">
       <select data-assign>
         <option value="" {{ 'selected' if not inq.assignee_id }}>미배정</option>
         {% for u in users %}<option value="{{ u.id }}" {{ 'selected' if inq.assignee_id == u.id }}>{{ u.display }}{% if u.id == current_user.id %} (나){% endif %}</option>{% endfor %}
       </select>
-    </label>
-    <div><span class="k">지역</span>{{ inq.region or '—' }}</div>
-    <div><span class="k">접수</span><span class="mono">{{ inq.received_at|kdatefull }}</span> · {% if inq.channel == 'phone' %}☎ 전화{% else %}{{ {'mobile':'모바일','pc':'PC','tablet':'태블릿'}.get(inq.device, '—') }}{% endif %}</div>
-    {% if inq.utm_term %}<div><span class="k">유입 키워드</span>{{ inq.utm_term }}</div>{% endif %}
-    {% if inq.utm_source %}<div><span class="k">유입 경로</span>{{ inq.utm_source }}{% if inq.utm_medium %} / {{ inq.utm_medium }}{% endif %}</div>{% endif %}
-  </div>
-
-  <div class="dp-sec">
-    <div class="lbl">문의 내용</div>
-    <div class="msg">{{ inq.message or '(내용 없음)' }}</div>
-  </div>
-
-  <div class="dp-tabs" role="tablist">
-    <button type="button" class="on" data-tab="log">상담 기록 <span class="mono">{{ logs|length }}</span></button>
-    <button type="button" data-tab="sms">문자 보내기</button>
-  </div>
-
-  <div class="tabpane" data-pane="log">
-    <textarea data-memo rows="2" placeholder="메모 또는 통화 내용"></textarea>
-    <div class="row">
-      <button type="button" class="btn sm" data-record="call">통화 완료로 기록</button>
-      <button type="button" class="btn sm" data-record="call_missed">부재중 기록</button>
-      <button type="button" class="btn sm primary" data-record="memo">메모 등록</button>
     </div>
-    <ul class="logs">
-      {% for lg in logs %}{% include "inquiries/_log_item.html" %}{% endfor %}
-    </ul>
+
+    <div class="th">유입</div>
+    <div class="td">{% if inq.channel == 'phone' %}☎ 전화 직접접수 · {{ inq.site.name }}{% else %}<i class="dot" style="background:{{ inq.site.color }}"></i> {{ inq.site.name }} · {{ {'mobile':'모바일','pc':'PC','tablet':'태블릿'}.get(inq.device, '') }}{% endif %}</div>
+    <div class="th">유입 키워드</div>
+    <div class="td">{{ inq.utm_term or '—' }}{% if inq.utm_source %} <span class="muted small">({{ inq.utm_source }}{% if inq.utm_medium %}/{{ inq.utm_medium }}{% endif %})</span>{% endif %}</div>
   </div>
 
+  {% if dups %}
+  <div class="dup-band">같은 연락처로 접수된 문의가 <b>{{ dups|length }}건</b> 더 있습니다 ·
+    {% for d in dups %}<a href="{{ url_for('inquiries.detail_view', inquiry_id=d.id) }}" data-pick="{{ d.id }}">No.{{ d.id }} {{ d.received_at|kdate }}</a>{{ ' · ' if not loop.last }}{% endfor %}
+  </div>
+  {% endif %}
 
-  <div class="tabpane" data-pane="sms" hidden>
-    <div class="sms-meta"><span>받는 사람 <b>{{ inq.customer_name }}</b> · <span class="mono">{{ inq.phone|phone }}</span></span><span>발신번호 <span class="mono">{{ (inq.site.sender_number or config.SMS_DEFAULT_SENDER)|phone }}</span></span></div>
-    <div class="tpl-pick">
-      <select data-tpl-select><option value="">템플릿 불러오기 ({{ templates|length }}개)</option>{% for t in templates %}<option value="{{ t.body }}">{{ t.name }}</option>{% endfor %}</select>
-      <span class="muted small">고르면 아래에 이름·사이트가 채워진 문구가 들어갑니다. 고쳐서 보내도 되고, 비워 두고 직접 써도 됩니다.{% if current_user.is_admin %} 문구 관리: <a href="{{ url_for('settings.templates') }}">문자 템플릿</a>{% endif %}</span>
+  <h3 class="dsec">인적사항</h3>
+  <form data-info-form>
+    <div class="dg">
+      <div class="th">성명</div>
+      <div class="td"><input name="customer_name" value="{{ inq.customer_name }}" maxlength="50" required {{ 'disabled' if inq.is_masked }}></div>
+      <div class="th">연락처</div>
+      <div class="td row nowrap"><input name="phone" value="{{ inq.phone|phone }}" inputmode="tel" required {{ 'disabled' if inq.is_masked }}><a class="btn sm" href="tel:{{ inq.phone }}" data-call>전화</a></div>
+      <div class="th">추가 연락처</div>
+      <div class="td"><input name="phone2" value="{{ inq.phone2|phone if inq.phone2 else '' }}" inputmode="tel" placeholder="없으면 비움" {{ 'disabled' if inq.is_masked }}></div>
+      <div class="th">지역</div>
+      <div class="td"><input name="region" value="{{ inq.region or '' }}" maxlength="100" {{ 'disabled' if inq.is_masked }}></div>
+      <div class="th">문의 내용</div>
+      <div class="td span3 msg">{{ inq.message or '(내용 없음)' }}</div>
     </div>
-    <textarea data-sms rows="5" placeholder="문자 내용"></textarea>
-    <div class="sms-foot"><span class="muted small"><span data-bytes>0</span> byte · <span data-smstype>SMS 단문</span></span>
-      <span class="row"><input type="datetime-local" data-sms-at><button type="button" class="btn sm" data-sms-send="scheduled">예약 발송</button><button type="button" class="btn sm primary" data-sms-send="now">지금 보내기</button></span></div>
-    <div class="sent-note" hidden>발송 완료 · 상담 기록에 저장되었습니다.</div>
-  </div>
+    {% if not inq.is_masked %}<div class="dform-foot"><span class="muted small">이름·연락처를 고치면 「인적사항 저장」을 누르세요. 추가 연락처로 들어온 문의도 이 건으로 합쳐집니다.</span><button type="submit" class="btn sm primary">인적사항 저장</button></div>{% endif %}
+  </form>
 </div>
