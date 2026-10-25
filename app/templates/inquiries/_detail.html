@@ -3,8 +3,8 @@
   <div class="dg">
     <div class="th">처리상태</div>
     <div class="td span3">
-      <div class="segs" data-status-group>
-        {% for s, label in STATUS_LABELS.items() %}<button type="button" class="{{ 'on' if inq.status == s }}" data-status="{{ s }}">{{ label }}</button>{% endfor %}
+      <div class="radios" data-status-group>
+        {% for s, label in STATUS_LABELS.items() %}<label><input type="radio" name="status_{{ inq.id }}" value="{{ s }}" data-status-radio {{ 'checked' if inq.status == s }}> {{ label }}</label>{% endfor %}
       </div>
       <div class="close-reason" hidden>
         <select data-close-reason>{% for r in close_reasons %}<option>{{ r }}</option>{% endfor %}</select>
@@ -37,7 +37,7 @@
   </div>
   {% endif %}
 
-  <h3 class="dsec">인적사항</h3>
+  <h3 class="dsec">고객 정보</h3>
   <form data-info-form>
     <div class="dg">
       <div class="th">성명</div>

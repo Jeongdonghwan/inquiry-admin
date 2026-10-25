@@ -93,6 +93,10 @@ const App = (() => {
     $$('[data-ctab]', dp).forEach(b => b.onclick = () => { $$('[data-ctab]', dp).forEach(x => x.classList.toggle('on', x === b)); $$('[data-cpane]', dp).forEach(p => p.hidden = p.dataset.cpane !== b.dataset.ctab); });
     // 상태
     const closeBox = $('.close-reason', dp);
+    $$('[data-status-radio]', dp).forEach(r => r.onchange = () => {
+      if (r.value === 'closed') { closeBox.hidden = false; return; }
+      act(id, 'status', { status: r.value });
+    });
     $$('[data-status-group] button', dp).forEach(b => b.onclick = () => {
       if (b.dataset.status === 'closed') { closeBox.hidden = false; return; }
       act(id, 'status', { status: b.dataset.status });
@@ -133,6 +137,7 @@ const App = (() => {
       const k = sf.dataset.key, t = sf.dataset.type;
       if (t === 'multi') a[k] = $$('input:checked', sf).map(i => i.value);
       else if (t === 'bool') a[k] = $('input', sf).checked;
+      else if (t === 'radio') { const c = $('input:checked', sf); if (c) a[k] = c.value; }
       else { const v = $('[name]', sf)?.value ?? ''; if (v !== '') a[k] = v; }
       $$('[data-check]', sf).forEach(c => { a[c.dataset.check] = c.checked; });
     });

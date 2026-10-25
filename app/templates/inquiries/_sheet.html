@@ -13,10 +13,10 @@
   </div>
   <form class="sheet-form wide" data-sheet-form-body>
     {% for sec in form.schema_json.sections %}
-    <fieldset class="sheet-sec">
-      <legend>{{ sec.title }}</legend>
+    <h4 class="sheet-sec-title">{{ sec.title }}</h4>
+    <div class="sheet-sec">
       {% for f in sec.fields %}{{ field(f, answers) }}{% endfor %}
-    </fieldset>
+    </div>
     {% endfor %}
   </form>
   {% endif %}

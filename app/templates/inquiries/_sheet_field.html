@@ -6,11 +6,11 @@
   <label class="sf-label" {% if f.type not in ('multi','radio','bool') %}for="sf-{{ f.key }}"{% endif %}>{{ f.label }}{% if f.required %}<i>*</i>{% endif %}</label>
   <div class="sf-input">
     {% if f.type == 'select' %}
-      <select id="sf-{{ f.key }}" name="{{ f.key }}"><option value="">선택</option>{% for o in f.options %}<option {{ 'selected' if v == o }}>{{ o }}</option>{% endfor %}</select>
+      <select id="sf-{{ f.key }}" name="{{ f.key }}"><option value="">선택하세요</option>{% for o in f.options %}<option {{ 'selected' if v == o }}>{{ o }}</option>{% endfor %}</select>
     {% elif f.type == 'multi' %}
       <div class="multi">{% for o in f.options %}<label><input type="checkbox" name="{{ f.key }}" value="{{ o }}" {{ 'checked' if v and o in v }}><span>{{ o }}</span></label>{% endfor %}</div>
     {% elif f.type == 'radio' %}
-      <div class="segs sm">{% for o in f.options %}<button type="button" class="{{ 'on' if v == o }}" data-radio="{{ o }}">{{ o }}</button>{% endfor %}<input type="hidden" name="{{ f.key }}" value="{{ v or '' }}"></div>
+      <div class="radios">{% for o in f.options %}<label><input type="radio" name="{{ f.key }}" value="{{ o }}" {{ 'checked' if v == o }}> {{ o }}</label>{% endfor %}</div>
     {% elif f.type == 'bool' %}
       <label class="check"><input type="checkbox" name="{{ f.key }}" value="true" {{ 'checked' if v }}><span>예</span></label>
     {% elif f.type == 'number' %}
