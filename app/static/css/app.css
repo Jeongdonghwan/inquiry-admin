@@ -508,3 +508,6 @@ a.trow:hover{background:#fafbfd}
 .login-mark{background:var(--primary)}
 .login-form input{background:#f8f9fb;border-color:var(--line)}
 .login-form .btn{border-radius:12px}
+
+.cols-dash-log>span:first-child,.cols-dash-new>span:first-child{min-width:0;overflow:hidden}
+.cols-dash-log .ellipsis{display:block}
