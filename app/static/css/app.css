@@ -609,3 +609,31 @@ a.trow:hover{background:#fafbfd}
 .classic .sheet-page .sheet-sec>.sf:last-child,.classic .sheet-page .sheet-sec>.sf:nth-last-child(2):nth-child(odd){border-bottom:1px solid #d6d6d6}
 .classic .sheet-page .sheet-sec{background:linear-gradient(#d6d6d6,#d6d6d6) left bottom/100% 1px no-repeat}
 .classic .sheet-page .sheet-sec>.sf:last-child,.classic .sheet-page .sheet-sec>.sf:nth-last-child(2):nth-child(odd){border-bottom:0}
+
+
+/* ---- 상담지: 보내주신 개인회생 양식 칸 배치 (2쌍/줄, full=한 줄, 내용란 크게) ---- */
+.classic .dg.top{grid-template-columns:100px minmax(0,1fr) 90px 190px 90px 170px}
+.classic .dg.top>.td{border-right:1px solid #d6d6d6}
+.classic .dg.top>.td:last-child{border-right:0}
+.classic .sheet-page .sheet-sec{grid-template-columns:1fr 1fr;border:1px solid #d6d6d6!important;background:#fff;overflow:hidden;margin:0}
+.classic .sheet-page .sheet-sec>.sf{border:0!important;border-right:1px solid #d6d6d6!important;border-bottom:1px solid #d6d6d6!important;margin:0 -1px -1px 0;grid-column:auto;min-height:38px}
+.classic .sheet-page .sheet-sec>.sf.full,.classic .sheet-page .sheet-sec>.sf[data-type=textarea],.classic .sheet-page .sheet-sec>.sf[data-type=radio],.classic .sheet-page .sheet-sec>.sf[data-type=multi]{grid-column:1/-1}
+.classic .sheet-page .sheet-sec>.sf{grid-template-columns:150px 1fr}
+.classic .sheet-page .sf[data-type=textarea] .sf-input{padding:6px 8px}
+.classic .sheet-page .sf textarea{min-height:150px;resize:vertical;line-height:1.6}
+.classic .sheet-page .sf textarea::placeholder{color:#aaa;font-size:12px}
+.classic .sheet-page .sf[data-key=summary] input{max-width:100%;width:100%}
+.classic .sheet-page .sheet-form > .sheet-sec:first-child{margin-top:4px}
+.classic .sheet-done{display:flex;justify-content:flex-end;gap:4px;margin:18px 0 6px}
+.classic .sheet-done .btn{height:34px;padding:0 16px;font-size:13px;font-weight:700;border:0;color:#fff}
+.classic .sheet-done .btn.gray{background:#8c8c8c}
+.classic .sheet-done .btn.blue{background:#3d8bfd}
+.classic #detail-logs .dsec:first-child{margin-top:4px}
+@media (max-width:1100px){
+  .classic .dg.top{grid-template-columns:100px minmax(0,1fr)}
+  .classic .sheet-page .sheet-sec{grid-template-columns:1fr}
+  .classic .sheet-page .sf{grid-template-columns:110px 1fr}
+}
+.classic .sheet-page .sf[data-type=text] input,.classic .sheet-page .sf-input select{max-width:220px;width:100%}
+.classic .sheet-page .sf[data-key=summary] input{max-width:100%}
+.classic .dg.top{grid-template-columns:100px minmax(0,1fr) 80px 170px 80px 160px}

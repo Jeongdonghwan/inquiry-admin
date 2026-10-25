@@ -1,4 +1,4 @@
-{% from "inquiries/_sheet_field.html" import field %}
+{% from "inquiries/_sheet_field.html" import field with context %}
 <div class="sheet" data-form-id="{{ form.id if form }}" data-save="{{ url_for('sheet.sheet_save', inquiry_id=inq.id) }}" data-txt="{{ url_for('sheet.sheet_txt', inquiry_id=inq.id, form_id=form.id if form else None) }}">
   <div class="sheet-tabs" role="tablist" aria-label="사건별 상담지">
     {% for t in tabs %}<button type="button" class="{{ 'on' if form and t.id == form.id }}" data-sheet-tab="{{ t.id }}">{{ t.name }}{% if t.id not in saved_ids %} <em>미작성</em>{% endif %}</button>{% endfor %}
@@ -13,11 +13,12 @@
   </div>
   <form class="sheet-form wide" data-sheet-form-body>
     {% for sec in form.schema_json.sections %}
-    <h4 class="sheet-sec-title">{{ sec.title }}</h4>
+    {% if not sec.hide_title %}<h4 class="sheet-sec-title">{{ sec.title }}</h4>{% endif %}
     <div class="sheet-sec">
       {% for f in sec.fields %}{{ field(f, answers) }}{% endfor %}
     </div>
     {% endfor %}
   </form>
+  <div class="sheet-done"><button type="button" class="btn gray" data-sheet-cancel>취소</button><button type="button" class="btn blue" data-sheet-done>작성완료</button></div>
   {% endif %}
 </div>

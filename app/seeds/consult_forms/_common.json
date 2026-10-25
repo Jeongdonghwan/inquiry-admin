@@ -1,20 +1,95 @@
 {
-  "_comment": "모든 사건 양식 맨 앞에 붙는 공통 섹션 (load_forms 가 합침). 양식 JSON에 \"common\": false 면 제외.",
-  "sections": [
-    {"title": "상담 정보", "fields": [
-      {"key": "ad_media", "label": "광고매체", "type": "radio", "options": ["뉴스", "홈페이지", "블로그", "카페", "cpa", "소개", "기타"]},
-      {"key": "summary", "label": "상담요약", "type": "text"}
-    ]},
-    {"title": "인적사항", "fields": [
-      {"key": "case_kind", "label": "사건종류", "type": "text"},
-      {"key": "age", "label": "나이", "type": "number", "unit": "세"},
-      {"key": "address", "label": "주소", "type": "text"}
-    ]},
-    {"title": "수임내용", "fields": [
-      {"key": "fee", "label": "수임료", "type": "number", "unit": "만원"},
-      {"key": "pay_method", "label": "방법", "type": "text"},
-      {"key": "deposit", "label": "계약금", "type": "number", "unit": "만원"},
-      {"key": "legal_cost", "label": "법비용", "type": "number", "unit": "원", "check": {"key": "legal_cost_separate", "label": "별도"}}
-    ]}
-  ]
+ "_comment": "모든 사건 양식 앞에 붙는 공통 섹션 (load_forms 가 합침). 양식 JSON에 \"common\": false 면 제외. full=한 줄 전체, hide_title=제목 숨김.",
+ "sections": [
+  {
+   "title": "상담 정보",
+   "hide_title": true,
+   "fields": [
+    {
+     "key": "ad_media",
+     "label": "광고매체",
+     "type": "radio",
+     "options": [
+      "뉴스",
+      "홈페이지",
+      "블로그",
+      "카페",
+      "cpa",
+      "소개",
+      "기타"
+     ]
+    },
+    {
+     "key": "summary",
+     "label": "상담요약",
+     "type": "text",
+     "full": true
+    }
+   ]
+  },
+  {
+   "title": "인적사항",
+   "fields": [
+    {
+     "key": "name",
+     "label": "성명",
+     "type": "text"
+    },
+    {
+     "key": "case_kind",
+     "label": "사건종류",
+     "type": "text"
+    },
+    {
+     "key": "age",
+     "label": "나이",
+     "type": "number",
+     "unit": "세"
+    },
+    {
+     "key": "phone",
+     "label": "연락처",
+     "type": "text"
+    },
+    {
+     "key": "address",
+     "label": "주소",
+     "type": "text",
+     "full": true
+    }
+   ]
+  },
+  {
+   "title": "수임내용",
+   "fields": [
+    {
+     "key": "fee",
+     "label": "수임료",
+     "type": "number",
+     "unit": "만원"
+    },
+    {
+     "key": "pay_method",
+     "label": "방법",
+     "type": "text"
+    },
+    {
+     "key": "deposit",
+     "label": "계약금",
+     "type": "number",
+     "unit": "만원"
+    },
+    {
+     "key": "legal_cost",
+     "label": "법비용",
+     "type": "number",
+     "unit": "원",
+     "check": {
+      "key": "legal_cost_separate",
+      "label": "별도"
+     }
+    }
+   ]
+  }
+ ]
 }

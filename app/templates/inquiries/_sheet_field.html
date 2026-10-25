@@ -1,7 +1,7 @@
 {% macro field(f, a) %}
-{% set v = a.get(f.key) %}
+{% set v = a.get(f.key) if f.key in a else ({'name': inq.customer_name, 'phone': inq.phone|phone}.get(f.key) if inq is defined and not inq.is_masked) %}
 {% set shown = (not f.show_if) or (a.get(f.show_if.key) == f.show_if.eq) %}
-<div class="sf {{ 'req' if f.required }} {{ 'missing' if f.required and shown and (v is none or v == '' or v == []) }}" data-key="{{ f.key }}" data-type="{{ f.type }}"
+<div class="sf {{ 'full' if f.full }} {{ 'req' if f.required }} {{ 'missing' if f.required and shown and (v is none or v == '' or v == []) }}" data-key="{{ f.key }}" data-type="{{ f.type }}"
      {% if f.show_if %}data-show-key="{{ f.show_if.key }}" data-show-eq='{{ f.show_if.eq|tojson }}'{% endif %} {{ '' if shown else 'hidden' }}>
   <label class="sf-label" {% if f.type not in ('multi','radio','bool') %}for="sf-{{ f.key }}"{% endif %}>{{ f.label }}{% if f.required %}<i>*</i>{% endif %}</label>
   <div class="sf-input">
@@ -16,7 +16,7 @@
     {% elif f.type == 'number' %}
       <span class="num"><input id="sf-{{ f.key }}" name="{{ f.key }}" inputmode="decimal" class="mono" value="{{ '{:,}'.format(v) if v is number else (v or '') }}">{% if f.unit %}<em>{{ f.unit }}</em>{% endif %}{% if f.check %}<label class="check inline"><input type="checkbox" data-check="{{ f.check.key }}" {{ 'checked' if a.get(f.check.key) }}><span>{{ f.check.label }}</span></label>{% endif %}</span>
     {% elif f.type == 'textarea' %}
-      <textarea id="sf-{{ f.key }}" name="{{ f.key }}" rows="3">{{ v or '' }}</textarea>
+      <textarea id="sf-{{ f.key }}" name="{{ f.key }}" rows="7" placeholder="{{ f.placeholder or '' }}">{{ v or '' }}</textarea>
     {% elif f.type == 'date' %}
       <input id="sf-{{ f.key }}" name="{{ f.key }}" type="date" value="{{ v or '' }}">
     {% else %}

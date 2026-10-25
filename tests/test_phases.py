@@ -79,7 +79,7 @@ def test_update_info_and_phone2_merge(client, login, app):
     login("admin")
     i = inq("정다은")
     j = client.post(f"/inquiries/{i.id}/info", json={"customer_name": "정다은", "phone": "010-2294-5518", "phone2": "010-9999-0000", "region": "서울"}).get_json()
-    assert j["ok"] and "010-9999-0000" in j["panel_html"]
+    assert j["ok"] and "010-9999-0000" in j["logs_html"]
     assert any("추가 연락처" in l.body for l in i.logs)
     assert client.post(f"/inquiries/{i.id}/info", json={"customer_name": "", "phone": "1"}).status_code == 400
     from app.services.merge import find_existing
@@ -127,8 +127,10 @@ def test_form_matching_and_show_if(app):
     assert sheet_svc.match_form(inq("정다은")).name.startswith("가사")
     keys = [x["key"] for x in sheet_svc.fields_of(f.schema_json)]
     assert keys[:2] == ["ad_media", "summary"] and "legal_cost" in keys  # 공통 섹션이 앞에
-    fld = next(x for x in sheet_svc.fields_of(f.schema_json) if x["key"] == "car_model")
-    assert not sheet_svc.visible(fld, {"has_car": False}) and sheet_svc.visible(fld, {"has_car": True})
+    assert keys[2:4] == ["name", "case_kind"] and {"debt_note", "asset_note", "etc_note"} <= set(keys)  # 보내준 개인회생 양식 그대로
+    fam = sheet_svc.match_form(inq("정다은"))
+    fld = next(x for x in sheet_svc.fields_of(fam.schema_json) if x["key"] == "separated_months")
+    assert not sheet_svc.visible(fld, {"separated": False}) and sheet_svc.visible(fld, {"separated": True})
 
 
 def test_schema_validation():
@@ -155,7 +157,7 @@ def test_save_answers_and_form_change_preserves(app):
     assert len(sheet_svc.sheets_of(i)) == 2
     assert any("상담지 추가: 민사" in l.body for l in i.logs)
     txt = sheet_svc.summary_text(s2)
-    assert "민사 상담지" in txt and "사건 종류: 대여금" in txt and "30,000원 (별도)" in txt
+    assert "민사 상담지" in txt and "분쟁 종류: 대여금" in txt and "30,000원 (별도)" in txt
 
 
 def test_sheet_endpoints_permission(client, login):

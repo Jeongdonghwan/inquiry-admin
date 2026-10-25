@@ -1,24 +1,111 @@
 {
-  "name": "민사",
-  "category": "legal",
-  "inquiry_type_keys": ["민사", "손해배상", "대여금", "계약", "임대차"],
-  "schema": {
-    "sections": [
-      {"title": "사건 개요", "fields": [
-        {"key": "civil_kind", "label": "사건 종류", "type": "select", "options": ["대여금", "손해배상", "계약 분쟁", "임대차·보증금", "공사대금", "명예훼손", "기타"], "required": true},
-        {"key": "side", "label": "입장", "type": "radio", "options": ["원고 예정", "피고 예정"], "required": true},
-        {"key": "amount", "label": "분쟁 금액", "type": "number", "unit": "만원", "required": true},
-        {"key": "opponent", "label": "상대방", "type": "radio", "options": ["개인", "법인"]}
-      ]},
-      {"title": "증거·시효", "fields": [
-        {"key": "evidence", "label": "증거", "type": "multi", "options": ["계약서", "차용증", "송금내역", "문자·카톡", "녹취", "없음"]},
-        {"key": "occurred_at", "label": "발생일(소멸시효)", "type": "date", "help": "대여일·사고일·계약일 등"},
-        {"key": "opponent_assets", "label": "상대방 재산 파악 여부", "type": "bool"},
-        {"key": "prior_action", "label": "기존 소송·지급명령", "type": "radio", "options": ["없음", "지급명령", "소송 진행 중", "판결 있음"]}
-      ]},
-      {"title": "판단", "fields": [
-        {"key": "note", "label": "특이사항", "type": "textarea"}
-      ]}
+ "name": "민사",
+ "category": "legal",
+ "inquiry_type_keys": [
+  "민사",
+  "손해배상",
+  "대여금",
+  "계약",
+  "임대차"
+ ],
+ "schema": {
+  "sections": [
+   {
+    "title": "사건내역",
+    "fields": [
+     {
+      "key": "civil_kind",
+      "label": "분쟁 종류",
+      "type": "select",
+      "options": [
+       "대여금",
+       "손해배상",
+       "계약 분쟁",
+       "임대차·보증금",
+       "공사대금",
+       "명예훼손",
+       "기타"
+      ],
+      "required": true
+     },
+     {
+      "key": "amount",
+      "label": "분쟁 금액",
+      "type": "number",
+      "unit": "만원",
+      "required": true
+     },
+     {
+      "key": "side",
+      "label": "입장",
+      "type": "radio",
+      "options": [
+       "원고 예정",
+       "피고 예정"
+      ],
+      "required": true
+     },
+     {
+      "key": "opponent",
+      "label": "상대방",
+      "type": "radio",
+      "options": [
+       "개인",
+       "법인"
+      ]
+     },
+     {
+      "key": "occurred_at",
+      "label": "발생일(시효)",
+      "type": "date",
+      "help": "대여일·사고일·계약일 등"
+     },
+     {
+      "key": "opponent_assets",
+      "label": "상대방 재산 파악",
+      "type": "bool"
+     },
+     {
+      "key": "prior_action",
+      "label": "기존 소송",
+      "type": "radio",
+      "options": [
+       "없음",
+       "지급명령",
+       "소송 진행 중",
+       "판결 있음"
+      ]
+     },
+     {
+      "key": "evidence",
+      "label": "증거",
+      "type": "multi",
+      "options": [
+       "계약서",
+       "차용증",
+       "송금내역",
+       "문자·카톡",
+       "녹취",
+       "없음"
+      ]
+     },
+     {
+      "key": "note",
+      "label": "내용",
+      "type": "textarea"
+     }
     ]
-  }
+   },
+   {
+    "title": "기타사항",
+    "fields": [
+     {
+      "key": "etc_note",
+      "label": "내용",
+      "type": "textarea"
+     }
+    ]
+   }
+  ]
+ }
 }

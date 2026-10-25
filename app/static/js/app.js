@@ -83,7 +83,7 @@ const App = (() => {
     $$('[data-pick]', dp).forEach(a => { a.href = `/inquiries/${a.dataset.pick}`; });
     // 고객 정보 수정
     const infoForm = $('[data-info-form]', dp);
-    infoForm?.addEventListener('submit', e => { e.preventDefault(); act(id, 'info', Object.fromEntries(new FormData(infoForm))).then(() => toast('인적사항을 저장했습니다')); });
+    infoForm?.addEventListener('submit', e => { e.preventDefault(); act(id, 'info', Object.fromEntries(new FormData(infoForm))).then(() => toast('고객 정보를 저장했습니다')); });
     $('[data-call]', dp)?.addEventListener('click', () => { $$('[data-record^="call"]').forEach(b => b.classList.add('pulse')); $('[data-memo]')?.scrollIntoView({ block: 'center' }); });
     // 탭 (A안) · 작성기 전환 (B안)
     $$('[data-tab]', dp).forEach(b => b.onclick = () => {
@@ -168,6 +168,8 @@ const App = (() => {
     form.addEventListener('input', onChange); form.addEventListener('change', onChange);
     $$('[data-radio]', form).forEach(b => b.onclick = () => { const wrap = b.parentElement, hid = $('input[type=hidden]', wrap), on = b.classList.contains('on'); $$('button', wrap).forEach(x => x.classList.remove('on')); if (!on) b.classList.add('on'); hid.value = on ? '' : b.dataset.radio; onChange(); });
     $$('.num input', form).forEach(i => i.addEventListener('blur', () => { const n = Number(i.value.replace(/,/g, '')); if (i.value && !isNaN(n)) i.value = n.toLocaleString(); }));
+    $('[data-sheet-done]', pane)?.addEventListener('click', async () => { await save(); toast('상담지를 저장했습니다'); const back = $('.topbar a.btn'); if (back) setTimeout(() => location.href = back.href, 400); });
+    $('[data-sheet-cancel]', pane)?.addEventListener('click', () => { const back = $('.topbar a.btn'); location.href = back ? back.href : '/inquiries'; });
     $('[data-sheet-copy]', pane)?.addEventListener('click', async () => { const r = await fetch(box.dataset.txt); await navigator.clipboard.writeText(await r.text()); toast('상담지 요약을 복사했습니다'); });
     $('[data-sheet-print]', pane)?.addEventListener('click', () => { document.body.classList.add('print-sheet'); window.print(); setTimeout(() => document.body.classList.remove('print-sheet'), 500); });
 

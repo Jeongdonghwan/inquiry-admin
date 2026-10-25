@@ -1,26 +1,152 @@
 {
-  "name": "인사·노무",
-  "category": "labor",
-  "inquiry_type_keys": ["노무", "인사", "부당해고", "해고", "임금체불", "체불", "괴롭힘", "산재", "징계", "퇴직금"],
-  "schema": {
-    "sections": [
-      {"title": "사안 개요", "fields": [
-        {"key": "side", "label": "입장", "type": "radio", "options": ["근로자", "사용자"], "required": true},
-        {"key": "issue", "label": "사안", "type": "select", "options": ["부당해고", "임금체불", "직장 내 괴롭힘", "산재", "징계·인사", "근로계약·연장수당", "기타"], "required": true},
-        {"key": "employment", "label": "재직 상태", "type": "radio", "options": ["재직 중", "퇴직", "해고 통보"]},
-        {"key": "tenure_months", "label": "근속 기간", "type": "number", "unit": "개월"},
-        {"key": "company_size", "label": "사업장 규모", "type": "radio", "options": ["5인 미만", "5~30인", "30~300인", "300인 이상"], "help": "5인 미만은 부당해고 구제신청 대상이 아님"}
-      ]},
-      {"title": "세부 내용", "fields": [
-        {"key": "unpaid_amount", "label": "체불 금액", "type": "number", "unit": "만원", "show_if": {"key": "issue", "eq": "임금체불"}},
-        {"key": "dismissal_date", "label": "해고일", "type": "date", "show_if": {"key": "issue", "eq": "부당해고"}, "help": "구제신청은 해고일로부터 3개월 이내"},
-        {"key": "proceeding", "label": "진정·구제신청·소송 진행", "type": "radio", "options": ["없음", "노동청 진정", "노동위 구제신청", "소송"]},
-        {"key": "evidence", "label": "증거", "type": "multi", "options": ["근로계약서", "급여명세서", "출퇴근 기록", "문자·카톡", "녹취", "진단서", "없음"]}
-      ]},
-      {"title": "요청·판단", "fields": [
-        {"key": "requests", "label": "요청사항", "type": "multi", "options": ["진정 대리", "구제신청", "합의 교섭", "소송", "자문"]},
-        {"key": "note", "label": "특이사항", "type": "textarea"}
-      ]}
+ "name": "인사·노무",
+ "category": "labor",
+ "inquiry_type_keys": [
+  "노무",
+  "인사",
+  "부당해고",
+  "해고",
+  "임금체불",
+  "체불",
+  "괴롭힘",
+  "산재",
+  "징계",
+  "퇴직금"
+ ],
+ "schema": {
+  "sections": [
+   {
+    "title": "사안내역",
+    "fields": [
+     {
+      "key": "side",
+      "label": "입장",
+      "type": "radio",
+      "options": [
+       "근로자",
+       "사용자"
+      ],
+      "required": true
+     },
+     {
+      "key": "issue",
+      "label": "사안",
+      "type": "select",
+      "options": [
+       "부당해고",
+       "임금체불",
+       "직장 내 괴롭힘",
+       "산재",
+       "징계·인사",
+       "근로계약·연장수당",
+       "기타"
+      ],
+      "required": true
+     },
+     {
+      "key": "tenure_months",
+      "label": "근속 기간",
+      "type": "number",
+      "unit": "개월"
+     },
+     {
+      "key": "employment",
+      "label": "재직 상태",
+      "type": "radio",
+      "options": [
+       "재직 중",
+       "퇴직",
+       "해고 통보"
+      ]
+     },
+     {
+      "key": "company_size",
+      "label": "사업장 규모",
+      "type": "radio",
+      "options": [
+       "5인 미만",
+       "5~30인",
+       "30~300인",
+       "300인 이상"
+      ],
+      "help": "5인 미만은 부당해고 구제신청 대상이 아님"
+     },
+     {
+      "key": "unpaid_amount",
+      "label": "체불 금액",
+      "type": "number",
+      "unit": "만원",
+      "full": true,
+      "show_if": {
+       "key": "issue",
+       "eq": "임금체불"
+      }
+     },
+     {
+      "key": "dismissal_date",
+      "label": "해고일",
+      "type": "date",
+      "full": true,
+      "show_if": {
+       "key": "issue",
+       "eq": "부당해고"
+      },
+      "help": "구제신청은 해고일로부터 3개월 이내"
+     },
+     {
+      "key": "proceeding",
+      "label": "진행 절차",
+      "type": "radio",
+      "options": [
+       "없음",
+       "노동청 진정",
+       "노동위 구제신청",
+       "소송"
+      ]
+     },
+     {
+      "key": "evidence",
+      "label": "증거",
+      "type": "multi",
+      "options": [
+       "근로계약서",
+       "급여명세서",
+       "출퇴근 기록",
+       "문자·카톡",
+       "녹취",
+       "진단서",
+       "없음"
+      ]
+     },
+     {
+      "key": "requests",
+      "label": "요청사항",
+      "type": "multi",
+      "options": [
+       "진정 대리",
+       "구제신청",
+       "합의 교섭",
+       "소송",
+       "자문"
+      ]
+     },
+     {
+      "key": "note",
+      "label": "내용",
+      "type": "textarea"
+     }
     ]
-  }
+   },
+   {
+    "title": "기타사항",
+    "fields": [
+     {
+      "key": "etc_note",
+      "label": "내용",
+      "type": "textarea"
+     }
+    ]
+   }
+  ]
+ }
 }

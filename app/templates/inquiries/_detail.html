@@ -1,8 +1,8 @@
 {# 데이터입력 상단: 처리상태·상담일·관리자 / 인적사항 (액션 후 이 조각만 교체) #}
 <div class="dp" data-id="{{ inq.id }}">
-  <div class="dg">
+  <div class="dg top">
     <div class="th">처리상태</div>
-    <div class="td span3">
+    <div class="td">
       <div class="radios" data-status-group>
         {% for s, label in STATUS_LABELS.items() %}<label><input type="radio" name="status_{{ inq.id }}" value="{{ s }}" data-status-radio {{ 'checked' if inq.status == s }}> {{ label }}</label>{% endfor %}
       </div>
@@ -25,10 +25,6 @@
       </select>
     </div>
 
-    <div class="th">유입</div>
-    <div class="td">{% if inq.channel == 'phone' %}☎ 전화 직접접수 · {{ inq.site.name }}{% else %}<i class="dot" style="background:{{ inq.site.color }}"></i> {{ inq.site.name }} · {{ {'mobile':'모바일','pc':'PC','tablet':'태블릿'}.get(inq.device, '') }}{% endif %}</div>
-    <div class="th">유입 키워드</div>
-    <div class="td">{{ inq.utm_term or '—' }}{% if inq.utm_source %} <span class="muted small">({{ inq.utm_source }}{% if inq.utm_medium %}/{{ inq.utm_medium }}{% endif %})</span>{% endif %}</div>
   </div>
 
   {% if dups %}
@@ -37,20 +33,4 @@
   </div>
   {% endif %}
 
-  <h3 class="dsec">고객 정보</h3>
-  <form data-info-form>
-    <div class="dg">
-      <div class="th">성명</div>
-      <div class="td"><input name="customer_name" value="{{ inq.customer_name }}" maxlength="50" required {{ 'disabled' if inq.is_masked }}></div>
-      <div class="th">연락처</div>
-      <div class="td row nowrap"><input name="phone" value="{{ inq.phone|phone }}" inputmode="tel" required {{ 'disabled' if inq.is_masked }}><a class="btn sm" href="tel:{{ inq.phone }}" data-call>전화</a></div>
-      <div class="th">추가 연락처</div>
-      <div class="td"><input name="phone2" value="{{ inq.phone2|phone if inq.phone2 else '' }}" inputmode="tel" placeholder="없으면 비움" {{ 'disabled' if inq.is_masked }}></div>
-      <div class="th">지역</div>
-      <div class="td"><input name="region" value="{{ inq.region or '' }}" maxlength="100" {{ 'disabled' if inq.is_masked }}></div>
-      <div class="th">문의 내용</div>
-      <div class="td span3 msg">{{ inq.message or '(내용 없음)' }}</div>
-    </div>
-    {% if not inq.is_masked %}<div class="dform-foot"><span class="muted small">이름·연락처를 고치면 「인적사항 저장」을 누르세요. 추가 연락처로 들어온 문의도 이 건으로 합쳐집니다.</span><button type="submit" class="btn sm primary">인적사항 저장</button></div>{% endif %}
-  </form>
 </div>

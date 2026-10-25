@@ -127,9 +127,10 @@ def _inquiries():
 # 상담지 답변 예시: 문의 번호(1-based) → (양식 파일 stem, answers)
 SHEETS = {
     1: ("01_rehab", {"ad_media": "홈페이지", "summary": "카드론 포함 7,800만원, 급여소득자. 회생 적합 검토", "case_kind": "개인회생", "age": 41,
-                     "address": "경기 수원시 영통구", "married": "기혼", "minor_children": 2, "housing": "전세", "housing_deposit": 3000,
-                     "has_car": False, "job": "회사원", "monthly_income": 280, "tenure": "6년", "total_debt": 7800, "creditor_count": 5,
-                     "overdue": "2026년 6월부터 연체", "seizure": "카드사 지급명령 1건", "debt_cause": "생활비·자녀 교육비"}),
+                     "address": "경기 수원시 영통구", "fee": 180, "pay_method": "분할 6회", "job": "직장인", "monthly_income": 280, "total_debt": 7800,
+                     "creditor_count": 5, "overdue": "2026년 6월부터",
+                     "debt_note": "카드론·현금서비스 위주, 카드사 지급명령 1건. 발생원인: 생활비·자녀 교육비",
+                     "asset_note": "기혼, 미성년 자녀 2명. 전세 보증금 3,000만원(본인 명의). 차량 없음. 재직 6년"}),
     5: ("05_traffic", {"side": "피해자", "accident_date": None, "fault_ratio": 0, "injury": "경상 염좌", "diagnosis_weeks": 4,
                        "treatment": "입원", "hospital_days": 14, "insurer_offer": 350, "insurer_contacted": True,
                        "docs": ["진단서", "입퇴원확인서"]}),
